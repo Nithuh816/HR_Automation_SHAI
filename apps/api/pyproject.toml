@@ -7,7 +7,6 @@ name = "hr-automation-api"
 version = "0.1.0"
 description = "HR_Automation_SHAI backend (FastAPI)"
 requires-python = ">=3.12"
-readme = { file = "../../README.md", content-type = "text/markdown" }
 dependencies = [
   "fastapi>=0.115,<1.0",
   "uvicorn[standard]>=0.32,<1.0",
