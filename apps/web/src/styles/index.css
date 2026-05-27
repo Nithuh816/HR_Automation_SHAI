@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Dashboard_UI.png — deep-violet dark theme */
+  :root {
+    --radius: 0.75rem;
+
+    --background: 270 60% 11%;          /* #1a0d2e */
+    --foreground: 270 20% 96%;
+
+    --card: 268 50% 18%;                /* #2a1745 */
+    --card-foreground: 270 20% 96%;
+
+    --popover: 268 50% 18%;
+    --popover-foreground: 270 20% 96%;
+
+    --primary: 270 91% 65%;             /* violet 500 */
+    --primary-foreground: 270 20% 98%;
+
+    --secondary: 268 40% 24%;
+    --secondary-foreground: 270 20% 96%;
+
+    --muted: 268 30% 28%;
+    --muted-foreground: 270 15% 75%;
+
+    --accent: 280 90% 60%;
+    --accent-foreground: 270 20% 98%;
+
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 268 40% 28%;
+    --input: 268 40% 28%;
+    --ring: 270 91% 65%;
+
+    --chart-1: 270 91% 65%;
+    --chart-2: 200 90% 60%;
+    --chart-3: 150 70% 50%;
+    --chart-4: 35 95% 60%;
+    --chart-5: 330 80% 65%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
