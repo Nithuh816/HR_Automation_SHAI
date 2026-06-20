@@ -3,6 +3,15 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+// Recharts sets `fill`/`stroke` as SVG presentation attributes, which don't
+// resolve CSS variables. Keep these in sync with apps/web/src/styles/index.css.
+const chartColors = {
+  primary: "hsl(270 91% 65%)",
+  border: "hsl(268 40% 28%)",
+  axis: "hsl(270 15% 75%)",
+  card: "hsl(268 50% 18%)",
+};
+
 const stageData = [
   { stage: "Sourced", count: 47 },
   { stage: "L1", count: 31 },
@@ -53,17 +62,17 @@ export function DashboardPage(): JSX.Element {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stageData}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="stage" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <CartesianGrid stroke={chartColors.border} strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="stage" stroke={chartColors.axis} fontSize={12} />
+                <YAxis stroke={chartColors.axis} fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: chartColors.card,
+                    border: `1px solid ${chartColors.border}`,
                     borderRadius: 8,
                   }}
                 />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="count" fill={chartColors.primary} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
