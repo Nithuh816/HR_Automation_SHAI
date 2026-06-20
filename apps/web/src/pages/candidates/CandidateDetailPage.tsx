@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetchTemplates, issueAssessment } from "@/lib/assessments";
 import { useAuth } from "@/lib/auth";
 import {
   SOURCE_LABELS,
@@ -20,6 +21,7 @@ export function CandidateDetailPage(): JSX.Element {
   const candidateId = Number(id);
   const { user } = useAuth();
   const [link, setLink] = useState<string | null>(null);
+  const [tplByApp, setTplByApp] = useState<Record<number, string>>({});
 
   const cand = useQuery({
     queryKey: ["candidate", candidateId],
@@ -29,9 +31,15 @@ export function CandidateDetailPage(): JSX.Element {
     queryKey: ["candidate-apps", candidateId],
     queryFn: () => fetchCandidateApplications(candidateId),
   });
+  const templates = useQuery({ queryKey: ["templates"], queryFn: fetchTemplates });
 
   const l1 = useMutation({
     mutationFn: (appId: number) => createL1Link(appId),
+    onSuccess: (res) => setLink(res.url),
+  });
+  const assessment = useMutation({
+    mutationFn: ({ appId, templateId }: { appId: number; templateId: number }) =>
+      issueAssessment(appId, templateId),
     onSuccess: (res) => setLink(res.url),
   });
 
@@ -113,14 +121,40 @@ export function CandidateDetailPage(): JSX.Element {
                     {a.status !== "active" ? ` · ${a.status}` : ""}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link to={`/pipeline/${a.requisition_id}`}>Pipeline</Link>
                   </Button>
                   {canEdit && a.status === "active" && (
-                    <Button size="sm" onClick={() => l1.mutate(a.id)} disabled={l1.isPending}>
-                      Generate L1 link
-                    </Button>
+                    <>
+                      <Button size="sm" onClick={() => l1.mutate(a.id)} disabled={l1.isPending}>
+                        L1 link
+                      </Button>
+                      <select
+                        className="rounded-md border border-border bg-transparent px-2 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={tplByApp[a.id] ?? ""}
+                        onChange={(e) => setTplByApp({ ...tplByApp, [a.id]: e.target.value })}
+                      >
+                        <option value="" className="bg-card">
+                          L2 template…
+                        </option>
+                        {templates.data?.map((t) => (
+                          <option key={t.id} value={t.id} className="bg-card">
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={!tplByApp[a.id] || assessment.isPending}
+                        onClick={() =>
+                          assessment.mutate({ appId: a.id, templateId: Number(tplByApp[a.id]) })
+                        }
+                      >
+                        Send L2
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>
@@ -132,7 +166,7 @@ export function CandidateDetailPage(): JSX.Element {
           {link && (
             <div className="rounded-md border border-primary/40 bg-primary/10 p-3 text-sm">
               <div className="mb-1 text-xs text-muted-foreground">
-                Share this single-use L1 link with the candidate (valid 7 days):
+                Share this single-use link with the candidate:
               </div>
               <code className="break-all text-xs">{link}</code>
             </div>

@@ -4,6 +4,13 @@ Every model must be imported here so that ``Base.metadata`` is fully populated
 for Alembic autogenerate and ``create_all`` (tests).
 """
 
+from app.models.assessment import (
+    AssessmentAnswer,
+    AssessmentAttempt,
+    AssessmentTemplate,
+    Question,
+    TemplateQuestion,
+)
 from app.models.candidate import (
     ApplicationFormL1,
     Candidate,
@@ -13,6 +20,7 @@ from app.models.candidate import (
 from app.models.department import Department
 from app.models.enums import (
     ApplicationStatus,
+    AttemptStatus,
     CandidateSource,
     MagicLinkScope,
     RequisitionStatus,
@@ -27,18 +35,24 @@ from app.models.user import User
 __all__ = [
     "ApplicationFormL1",
     "ApplicationStatus",
+    "AssessmentAnswer",
+    "AssessmentAttempt",
+    "AssessmentTemplate",
+    "AttemptStatus",
     "Candidate",
     "CandidateApplication",
     "CandidateSource",
     "Department",
     "MagicLink",
     "MagicLinkScope",
+    "Question",
     "Requisition",
     "RequisitionComment",
     "RequisitionStatus",
     "Role",
     "Stage",
     "Team",
+    "TemplateQuestion",
     "Urgency",
     "User",
 ]

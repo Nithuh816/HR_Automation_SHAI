@@ -10,12 +10,14 @@ inferred from designation + seniority; correct any line below and re-run.
 
 from __future__ import annotations
 
+import json
 import re
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
+from app.models.assessment import AssessmentTemplate, Question, TemplateQuestion
 from app.models.department import Department
 from app.models.enums import RequisitionStatus, Role, Team, Urgency
 from app.models.requisition import Requisition
@@ -118,6 +120,7 @@ def run(db: Session) -> None:
 
     db.commit()
     _seed_sample_requisitions(db, dept_ids, user_ids)
+    _seed_sample_assessment(db, user_ids)
 
 
 # Demo requisitions (title, department, headcount, urgency, recruiter name | None).
@@ -149,6 +152,52 @@ def _seed_sample_requisitions(
         db.add(req)
         db.flush()
         req.code = make_code(req.id)
+    db.commit()
+
+
+# Demo question bank: (text, options, correct_index).
+SAMPLE_QUESTIONS: list[tuple[str, list[str], int]] = [
+    ("Which code set is used for diagnoses in the US?", ["CPT", "ICD-10-CM", "HCPCS", "NDC"], 1),
+    ("CPT codes are maintained by which organization?", ["WHO", "CMS", "AMA", "AHIMA"], 2),
+    (
+        "What does 'HCC' stand for in risk adjustment?",
+        [
+            "Hospital Care Code",
+            "Hierarchical Condition Category",
+            "Health Claim Code",
+            "High Cost Case",
+        ],
+        1,
+    ),
+    ("A modifier in CPT coding is how many characters?", ["1", "2", "3", "4"], 1),
+    ("Which is a valid PAN format?", ["AAAAA9999A", "9999AAAAA9", "AAAA99999", "99AAAAA999"], 0),
+]
+
+
+def _seed_sample_assessment(db: Session, user_ids: dict[str, int]) -> None:
+    if db.scalar(select(func.count()).select_from(AssessmentTemplate)):
+        return
+    author_id = user_ids.get("Balaji P")
+    template = AssessmentTemplate(
+        name="Medical Coding Basics",
+        description="Entry-level coding screening (L2).",
+        duration_minutes=20,
+        pass_pct=60,
+        created_by_id=author_id,
+    )
+    db.add(template)
+    db.flush()
+    for position, (text, options, correct) in enumerate(SAMPLE_QUESTIONS):
+        q = Question(
+            text=text,
+            options_json=json.dumps(options),
+            correct_index=correct,
+            category="Medical Coding",
+            created_by_id=author_id,
+        )
+        db.add(q)
+        db.flush()
+        db.add(TemplateQuestion(template_id=template.id, question_id=q.id, position=position))
     db.commit()
 
 

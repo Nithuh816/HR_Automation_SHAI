@@ -2,6 +2,7 @@ import {
   Building2,
   CalendarClock,
   ClipboardCheck,
+  ClipboardList,
   FileText,
   Inbox,
   LayoutDashboard,
@@ -58,10 +59,16 @@ export function Sidebar(): JSX.Element {
         ))}
 
         {user && (user.role === "hr_head" || user.role === "ta_tl") && (
-          <NavLink to="/requisitions/inbox" className={linkClass}>
-            <Inbox className="h-4 w-4" />
-            <span>Triage inbox</span>
-          </NavLink>
+          <>
+            <NavLink to="/requisitions/inbox" className={linkClass}>
+              <Inbox className="h-4 w-4" />
+              <span>Triage inbox</span>
+            </NavLink>
+            <NavLink to="/assessment/templates" className={linkClass}>
+              <ClipboardList className="h-4 w-4" />
+              <span>Assessments</span>
+            </NavLink>
+          </>
         )}
 
         {user?.role === "hr_head" && (

@@ -91,3 +91,11 @@ class CandidateSource(StrEnum):
 
 class MagicLinkScope(StrEnum):
     L1_APPLY = "l1_apply"
+    L2_ASSESSMENT = "l2_assessment"
+
+
+class AttemptStatus(StrEnum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    SUBMITTED = "submitted"
+    EXPIRED = "expired"
