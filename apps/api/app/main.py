@@ -6,7 +6,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, departments, health, users
+from app.routers import (
+    auth,
+    dashboard,
+    departments,
+    health,
+    lookups,
+    requisitions,
+    users,
+)
 
 
 def _configure_logging() -> None:
@@ -50,6 +58,9 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(users.router)
     app.include_router(departments.router)
+    app.include_router(requisitions.router)
+    app.include_router(dashboard.router)
+    app.include_router(lookups.router)
     return app
 
 

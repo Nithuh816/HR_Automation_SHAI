@@ -51,11 +51,18 @@ export function Sidebar(): JSX.Element {
       </div>
       <nav className="space-y-1">
         {nav.map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} className={linkClass}>
+          <NavLink key={to} to={to} className={linkClass} end={to === "/requisitions"}>
             <Icon className="h-4 w-4" />
             <span>{label}</span>
           </NavLink>
         ))}
+
+        {user && (user.role === "hr_head" || user.role === "ta_tl") && (
+          <NavLink to="/requisitions/inbox" className={linkClass}>
+            <Inbox className="h-4 w-4" />
+            <span>Triage inbox</span>
+          </NavLink>
+        )}
 
         {user?.role === "hr_head" && (
           <>

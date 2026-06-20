@@ -5,7 +5,17 @@ for Alembic autogenerate and ``create_all`` (tests).
 """
 
 from app.models.department import Department
-from app.models.enums import Role, Team
+from app.models.enums import RequisitionStatus, Role, Team, Urgency
+from app.models.requisition import Requisition, RequisitionComment
 from app.models.user import User
 
-__all__ = ["Department", "Role", "Team", "User"]
+__all__ = [
+    "Department",
+    "Requisition",
+    "RequisitionComment",
+    "RequisitionStatus",
+    "Role",
+    "Team",
+    "Urgency",
+    "User",
+]

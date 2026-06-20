@@ -28,3 +28,19 @@ class Team(StrEnum):
     PR = "pr"
     MGMT = "mgmt"
     DEPT = "dept"
+
+
+class RequisitionStatus(StrEnum):
+    DRAFT = "draft"  # being prepared, not yet in triage
+    SUBMITTED = "submitted"  # awaiting HR Head triage (the inbox)
+    ASSIGNED = "assigned"  # a TA recruiter owns it; sourcing underway
+    ON_HOLD = "on_hold"
+    FILLED = "filled"
+    CANCELLED = "cancelled"
+
+
+class Urgency(StrEnum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"

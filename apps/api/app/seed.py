@@ -12,13 +12,15 @@ from __future__ import annotations
 
 import re
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
 from app.models.department import Department
-from app.models.enums import Role, Team
+from app.models.enums import RequisitionStatus, Role, Team, Urgency
+from app.models.requisition import Requisition
 from app.models.user import User
+from app.services.requisitions import make_code
 
 EMAIL_DOMAIN = "shaihealth.com"
 
@@ -114,6 +116,39 @@ def run(db: Session) -> None:
             if dept is not None:
                 dept.head_user_id = user_ids[head_name]
 
+    db.commit()
+    _seed_sample_requisitions(db, dept_ids, user_ids)
+
+
+# Demo requisitions (title, department, headcount, urgency, recruiter name | None).
+SAMPLE_REQS: list[tuple[str, str, int, Urgency, str | None]] = [
+    ("Senior Medical Coder", "Transactions - Coding", 3, Urgency.HIGH, None),
+    ("AR Caller (Night Shift)", "RCM", 5, Urgency.URGENT, None),
+    ("Quality Analyst - Coding", "Quality Assurance", 2, Urgency.NORMAL, "Pavithra S"),
+    ("HCC Coder", "HCC", 1, Urgency.NORMAL, "Twinkle Amaldia Pereira"),
+]
+
+
+def _seed_sample_requisitions(
+    db: Session, dept_ids: dict[str, int], user_ids: dict[str, int]
+) -> None:
+    if db.scalar(select(func.count()).select_from(Requisition)):
+        return  # only seed demo data into an empty table
+    hr_head_id = user_ids.get("Balaji P")
+    for title, dept_name, headcount, urgency, recruiter in SAMPLE_REQS:
+        req = Requisition(
+            code="",
+            title=title,
+            department_id=dept_ids[dept_name],
+            headcount=headcount,
+            urgency=urgency,
+            status=(RequisitionStatus.ASSIGNED if recruiter else RequisitionStatus.SUBMITTED),
+            created_by_id=hr_head_id,
+            assigned_recruiter_id=user_ids.get(recruiter) if recruiter else None,
+        )
+        db.add(req)
+        db.flush()
+        req.code = make_code(req.id)
     db.commit()
 
 

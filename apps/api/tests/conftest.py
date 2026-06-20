@@ -53,6 +53,20 @@ def make_user(db):
 
 
 @pytest.fixture()
+def make_dept(db):
+    from app.models.department import Department
+
+    def _make(name: str) -> Department:
+        dept = Department(name=name)
+        db.add(dept)
+        db.commit()
+        db.refresh(dept)
+        return dept
+
+    return _make
+
+
+@pytest.fixture()
 def auth_header():
     from app.auth.jwt import mint_access_token
 
