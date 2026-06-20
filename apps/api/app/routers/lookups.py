@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 
 from app.deps import CurrentUser, SessionDep
+from app.models.assessment import AssessmentTemplate
 from app.models.department import Department
 from app.models.enums import Role
 from app.models.user import User
@@ -33,6 +34,12 @@ class UserOption(BaseModel):
     role: Role
 
 
+class TemplateOption(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+
+
 @router.get("/departments", response_model=list[DepartmentOption])
 def departments(db: SessionDep, _: CurrentUser) -> list[Department]:
     return list(db.scalars(select(Department).order_by(Department.name)))
@@ -47,5 +54,15 @@ def users(db: SessionDep, _: CurrentUser) -> list[User]:
 def recruiters(db: SessionDep, _: CurrentUser) -> list[User]:
     stmt = (
         select(User).where(User.is_active).where(User.role.in_(RECRUITER_ROLES)).order_by(User.name)
+    )
+    return list(db.scalars(stmt))
+
+
+@router.get("/assessment-templates", response_model=list[TemplateOption])
+def assessment_templates(db: SessionDep, _: CurrentUser) -> list[AssessmentTemplate]:
+    stmt = (
+        select(AssessmentTemplate)
+        .where(AssessmentTemplate.is_active)
+        .order_by(AssessmentTemplate.name)
     )
     return list(db.scalars(stmt))

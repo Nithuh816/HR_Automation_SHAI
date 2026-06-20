@@ -53,6 +53,17 @@ export async function fetchTemplates(): Promise<Template[]> {
   return (await api.get<Template[]>("/assessment/templates")).data;
 }
 
+export interface TemplateOption {
+  id: number;
+  name: string;
+}
+
+// Readable by any authenticated user (recruiters issuing assessments), unlike
+// the admin /assessment/templates endpoint which is HR Head / TA TL only.
+export async function fetchTemplateOptions(): Promise<TemplateOption[]> {
+  return (await api.get<TemplateOption[]>("/lookups/assessment-templates")).data;
+}
+
 export async function fetchTemplate(id: number): Promise<TemplateDetail> {
   return (await api.get<TemplateDetail>(`/assessment/templates/${id}`)).data;
 }

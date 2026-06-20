@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { fetchTemplates, issueAssessment } from "@/lib/assessments";
+import { fetchTemplateOptions, issueAssessment } from "@/lib/assessments";
 import { useAuth } from "@/lib/auth";
 import {
   SOURCE_LABELS,
@@ -31,7 +31,10 @@ export function CandidateDetailPage(): JSX.Element {
     queryKey: ["candidate-apps", candidateId],
     queryFn: () => fetchCandidateApplications(candidateId),
   });
-  const templates = useQuery({ queryKey: ["templates"], queryFn: fetchTemplates });
+  const templates = useQuery({
+    queryKey: ["template-options"],
+    queryFn: fetchTemplateOptions,
+  });
 
   const l1 = useMutation({
     mutationFn: (appId: number) => createL1Link(appId),
