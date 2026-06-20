@@ -44,3 +44,50 @@ class Urgency(StrEnum):
     NORMAL = "normal"
     HIGH = "high"
     URGENT = "urgent"
+
+
+class Stage(StrEnum):
+    """Ordered pipeline stages for a candidate application."""
+
+    SOURCED = "sourced"
+    L1_APPLICATION = "l1_application"
+    L2_ASSESSMENT = "l2_assessment"
+    L3_HR = "l3_hr"
+    L4_TECH1 = "l4_tech1"
+    L5_TECH2 = "l5_tech2"
+    L6_SALARY = "l6_salary"
+    OFFER = "offer"
+    JOINED = "joined"
+
+
+# Canonical ordering used to advance applications stage-by-stage.
+STAGE_ORDER: tuple[Stage, ...] = (
+    Stage.SOURCED,
+    Stage.L1_APPLICATION,
+    Stage.L2_ASSESSMENT,
+    Stage.L3_HR,
+    Stage.L4_TECH1,
+    Stage.L5_TECH2,
+    Stage.L6_SALARY,
+    Stage.OFFER,
+    Stage.JOINED,
+)
+
+
+class ApplicationStatus(StrEnum):
+    ACTIVE = "active"
+    REJECTED = "rejected"
+    WITHDRAWN = "withdrawn"
+
+
+class CandidateSource(StrEnum):
+    LINKEDIN = "linkedin"
+    NAUKRI = "naukri"
+    REFERRAL = "referral"
+    INSTITUTION = "institution"
+    COLD_CALL = "cold_call"
+    OTHER = "other"
+
+
+class MagicLinkScope(StrEnum):
+    L1_APPLY = "l1_apply"
