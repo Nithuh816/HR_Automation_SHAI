@@ -11,7 +11,9 @@ from app.config import settings
 
 class ObjectStorage(ABC):
     @abstractmethod
-    def put(self, key: str, body: bytes, content_type: str = "application/octet-stream") -> None: ...
+    def put(
+        self, key: str, body: bytes, content_type: str = "application/octet-stream"
+    ) -> None: ...
 
     @abstractmethod
     def get(self, key: str) -> bytes: ...

@@ -48,6 +48,19 @@ node_modules/
 out/
 .cache/
 
+# Databases (local dev / test sqlite)
+*.db
+*.sqlite
+*.sqlite3
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Spreadsheets — may contain employee PII (e.g. directory exports); never commit
+*.xlsx
+*.xls
+*.csv
+
 # Misc
 *.tmp
 *.bak

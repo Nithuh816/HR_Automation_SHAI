@@ -1,19 +1,23 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-import { AppShell } from "@/components/layout/AppShell";
+import { RequireAuth } from "@/components/layout/RequireAuth";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { HealthPage } from "@/pages/HealthPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { DepartmentsPage } from "@/pages/settings/DepartmentsPage";
+import { UsersPage } from "@/pages/settings/UsersPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   {
     path: "/",
-    element: <AppShell />,
+    element: <RequireAuth />,
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "health", element: <HealthPage /> },
+      { path: "settings/users", element: <UsersPage /> },
+      { path: "settings/departments", element: <DepartmentsPage /> },
       // Stubs — pages added per-milestone.
       { path: "requisitions", element: <ComingSoon name="Requisitions (M2)" /> },
       { path: "candidates", element: <ComingSoon name="Candidates (M3)" /> },
@@ -21,7 +25,6 @@ export const router = createBrowserRouter([
       { path: "interviews/today", element: <ComingSoon name="Interviews (M5)" /> },
       { path: "offers", element: <ComingSoon name="Offers (M6)" /> },
       { path: "onboarding/queue", element: <ComingSoon name="Onboarding queue (M8)" /> },
-      { path: "settings/users", element: <ComingSoon name="Settings (M11)" /> },
     ],
   },
   { path: "*", element: <Navigate to="/dashboard" replace /> },
