@@ -19,7 +19,8 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.models.assessment import AssessmentTemplate, Question, TemplateQuestion
 from app.models.department import Department
-from app.models.enums import RequisitionStatus, Role, Team, Urgency
+from app.models.enums import InterviewRound, RequisitionStatus, Role, Team, Urgency
+from app.models.interview import RubricCriterion, RubricTemplate
 from app.models.requisition import Requisition
 from app.models.user import User
 from app.services.requisitions import make_code
@@ -121,6 +122,7 @@ def run(db: Session) -> None:
     db.commit()
     _seed_sample_requisitions(db, dept_ids, user_ids)
     _seed_sample_assessment(db, user_ids)
+    _seed_sample_rubrics(db, user_ids)
 
 
 # Demo requisitions (title, department, headcount, urgency, recruiter name | None).
@@ -198,6 +200,56 @@ def _seed_sample_assessment(db: Session, user_ids: dict[str, int]) -> None:
         db.add(q)
         db.flush()
         db.add(TemplateQuestion(template_id=template.id, question_id=q.id, position=position))
+    db.commit()
+
+
+# Demo rubrics: (name, round, description, [(label, weight, max_score), ...]).
+SAMPLE_RUBRICS: list[tuple[str, InterviewRound, str, list[tuple[str, int, int]]]] = [
+    (
+        "HR Screening (L3)",
+        InterviewRound.L3_HR,
+        "Culture fit, communication, and basic eligibility.",
+        [
+            ("Communication", 2, 5),
+            ("Culture & values fit", 2, 5),
+            ("Stability & intent", 1, 5),
+            ("Compensation alignment", 1, 5),
+        ],
+    ),
+    (
+        "Coding Technical (L4)",
+        InterviewRound.L4_TECH1,
+        "Hands-on medical-coding competence.",
+        [
+            ("ICD-10-CM / CPT accuracy", 3, 5),
+            ("Guideline application", 2, 5),
+            ("Speed & productivity", 1, 5),
+            ("Tool familiarity", 1, 5),
+        ],
+    ),
+]
+
+
+def _seed_sample_rubrics(db: Session, user_ids: dict[str, int]) -> None:
+    if db.scalar(select(func.count()).select_from(RubricTemplate)):
+        return
+    author_id = user_ids.get("Balaji P")
+    for name, round_, description, criteria in SAMPLE_RUBRICS:
+        rubric = RubricTemplate(
+            name=name, round=round_, description=description, created_by_id=author_id
+        )
+        db.add(rubric)
+        db.flush()
+        for position, (label, weight, max_score) in enumerate(criteria):
+            db.add(
+                RubricCriterion(
+                    rubric_template_id=rubric.id,
+                    label=label,
+                    weight=weight,
+                    max_score=max_score,
+                    position=position,
+                )
+            )
     db.commit()
 
 

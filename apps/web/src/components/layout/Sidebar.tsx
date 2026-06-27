@@ -6,6 +6,7 @@ import {
   FileText,
   Inbox,
   LayoutDashboard,
+  ListChecks,
   UserCog,
   UserPlus,
   Users,
@@ -67,6 +68,10 @@ export function Sidebar(): JSX.Element {
             <NavLink to="/assessment/templates" className={linkClass}>
               <ClipboardList className="h-4 w-4" />
               <span>Assessments</span>
+            </NavLink>
+            <NavLink to="/settings/rubrics" className={linkClass}>
+              <ListChecks className="h-4 w-4" />
+              <span>Rubrics</span>
             </NavLink>
           </>
         )}

@@ -9,6 +9,8 @@ import { CandidateNewPage } from "@/pages/candidates/CandidateNewPage";
 import { CandidatesListPage } from "@/pages/candidates/CandidatesListPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { HealthPage } from "@/pages/HealthPage";
+import { InterviewDetailPage } from "@/pages/interviews/InterviewDetailPage";
+import { InterviewsTodayPage } from "@/pages/interviews/InterviewsTodayPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { PipelineBoardPage } from "@/pages/pipeline/PipelineBoardPage";
 import { PipelineChooserPage } from "@/pages/pipeline/PipelineChooserPage";
@@ -19,6 +21,8 @@ import { RequisitionInboxPage } from "@/pages/requisitions/RequisitionInboxPage"
 import { RequisitionNewPage } from "@/pages/requisitions/RequisitionNewPage";
 import { RequisitionsListPage } from "@/pages/requisitions/RequisitionsListPage";
 import { DepartmentsPage } from "@/pages/settings/DepartmentsPage";
+import { RubricDetailPage } from "@/pages/settings/RubricDetailPage";
+import { RubricsPage } from "@/pages/settings/RubricsPage";
 import { UsersPage } from "@/pages/settings/UsersPage";
 
 export const router = createBrowserRouter([
@@ -47,8 +51,11 @@ export const router = createBrowserRouter([
       { path: "assessment/templates", element: <TemplatesPage /> },
       { path: "assessment/templates/:id", element: <TemplateDetailPage /> },
       { path: "assessment/questions", element: <QuestionsPage /> },
+      { path: "interviews/today", element: <InterviewsTodayPage /> },
+      { path: "interviews/:id", element: <InterviewDetailPage /> },
+      { path: "settings/rubrics", element: <RubricsPage /> },
+      { path: "settings/rubrics/:id", element: <RubricDetailPage /> },
       // Stubs — pages added per-milestone.
-      { path: "interviews/today", element: <ComingSoon name="Interviews (M5)" /> },
       { path: "offers", element: <ComingSoon name="Offers (M6)" /> },
       { path: "onboarding/queue", element: <ComingSoon name="Onboarding queue (M8)" /> },
     ],

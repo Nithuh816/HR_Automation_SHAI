@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -7,12 +7,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fetchTemplateOptions, issueAssessment } from "@/lib/assessments";
 import { useAuth } from "@/lib/auth";
 import {
+  type Application,
   SOURCE_LABELS,
   STAGE_LABELS,
   createL1Link,
   fetchCandidate,
   fetchCandidateApplications,
 } from "@/lib/candidates";
+import {
+  type InterviewRound,
+  MODE_LABELS,
+  ROUNDS,
+  ROUND_LABELS,
+  STATUS_LABELS,
+  fetchApplicationInterviews,
+  fetchInterviewerOptions,
+  fetchRubricOptions,
+  scheduleInterview,
+} from "@/lib/interviews";
 
 const CAN_EDIT = ["hr_head", "ta_tl", "ta_recruiter"];
 
@@ -176,6 +188,11 @@ export function CandidateDetailPage(): JSX.Element {
           )}
         </CardContent>
       </Card>
+
+      {canEdit &&
+        apps.data
+          ?.filter((a) => a.status === "active")
+          .map((a) => <InterviewScheduler key={a.id} application={a} />)}
     </div>
   );
 }
@@ -186,5 +203,147 @@ function Field({ label, value }: { label: string; value: string }) {
       <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
       <dd className="mt-0.5">{value}</dd>
     </div>
+  );
+}
+
+const schedInput =
+  "w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+function InterviewScheduler({ application }: { application: Application }): JSX.Element {
+  const qc = useQueryClient();
+  const appId = application.id;
+  const [form, setForm] = useState<{
+    round: InterviewRound;
+    interviewer_id: string;
+    rubric_template_id: string;
+    mode: "online" | "in_person" | "phone";
+    when: string;
+  }>({ round: "l3_hr", interviewer_id: "", rubric_template_id: "", mode: "online", when: "" });
+
+  const interviews = useQuery({
+    queryKey: ["app-interviews", appId],
+    queryFn: () => fetchApplicationInterviews(appId),
+  });
+  const interviewers = useQuery({ queryKey: ["interviewers"], queryFn: fetchInterviewerOptions });
+  const rubricOptions = useQuery({ queryKey: ["rubric-options"], queryFn: fetchRubricOptions });
+
+  const schedule = useMutation({
+    mutationFn: () =>
+      scheduleInterview(appId, {
+        round: form.round,
+        mode: form.mode,
+        scheduled_at: new Date(form.when).toISOString(),
+        duration_minutes: 45,
+        interviewer_id: Number(form.interviewer_id),
+        rubric_template_id: form.rubric_template_id ? Number(form.rubric_template_id) : null,
+      }),
+    onSuccess: () => {
+      setForm({ ...form, when: "", interviewer_id: "", rubric_template_id: "" });
+      void qc.invalidateQueries({ queryKey: ["app-interviews", appId] });
+      void qc.invalidateQueries({ queryKey: ["candidate-apps"] });
+    },
+  });
+
+  const rubricsForRound = rubricOptions.data?.filter((r) => r.round === form.round) ?? [];
+  const canSubmit = form.interviewer_id !== "" && form.when !== "" && !schedule.isPending;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">
+          Interviews · Requisition #{application.requisition_id}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {interviews.data && interviews.data.length > 0 ? (
+          <ul className="space-y-1">
+            {interviews.data.map((iv) => (
+              <li key={iv.id}>
+                <Link
+                  to={`/interviews/${iv.id}`}
+                  className="flex items-center justify-between gap-2 rounded-md border border-border/50 p-2 text-xs hover:text-primary"
+                >
+                  <span>
+                    {ROUND_LABELS[iv.round]} · {iv.interviewer_name}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {new Date(iv.scheduled_at).toLocaleDateString()} · {STATUS_LABELS[iv.status]}
+                    {iv.scorecard ? " ✓" : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground">No interviews scheduled yet.</p>
+        )}
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <select
+            className={schedInput}
+            value={form.round}
+            onChange={(e) =>
+              setForm({ ...form, round: e.target.value as InterviewRound, rubric_template_id: "" })
+            }
+          >
+            {ROUNDS.map((r) => (
+              <option key={r} value={r} className="bg-card">
+                {ROUND_LABELS[r]}
+              </option>
+            ))}
+          </select>
+          <select
+            className={schedInput}
+            value={form.interviewer_id}
+            onChange={(e) => setForm({ ...form, interviewer_id: e.target.value })}
+          >
+            <option value="" className="bg-card">
+              Interviewer…
+            </option>
+            {interviewers.data?.map((u) => (
+              <option key={u.id} value={u.id} className="bg-card">
+                {u.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className={schedInput}
+            value={form.mode}
+            onChange={(e) =>
+              setForm({ ...form, mode: e.target.value as "online" | "in_person" | "phone" })
+            }
+          >
+            {(["online", "in_person", "phone"] as const).map((m) => (
+              <option key={m} value={m} className="bg-card">
+                {MODE_LABELS[m]}
+              </option>
+            ))}
+          </select>
+          <select
+            className={schedInput}
+            value={form.rubric_template_id}
+            onChange={(e) => setForm({ ...form, rubric_template_id: e.target.value })}
+          >
+            <option value="" className="bg-card">
+              Rubric (optional)…
+            </option>
+            {rubricsForRound.map((r) => (
+              <option key={r.id} value={r.id} className="bg-card">
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="datetime-local"
+            className={`${schedInput} col-span-2 sm:col-span-1`}
+            value={form.when}
+            onChange={(e) => setForm({ ...form, when: e.target.value })}
+          />
+        </div>
+        <Button size="sm" disabled={!canSubmit} onClick={() => schedule.mutate()}>
+          Schedule interview
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

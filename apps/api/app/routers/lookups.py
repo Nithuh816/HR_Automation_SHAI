@@ -13,7 +13,8 @@ from sqlalchemy import select
 from app.deps import CurrentUser, SessionDep
 from app.models.assessment import AssessmentTemplate
 from app.models.department import Department
-from app.models.enums import Role
+from app.models.enums import InterviewRound, Role
+from app.models.interview import RubricTemplate
 from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/lookups", tags=["lookups"])
@@ -40,6 +41,13 @@ class TemplateOption(BaseModel):
     name: str
 
 
+class RubricOption(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    round: InterviewRound
+
+
 @router.get("/departments", response_model=list[DepartmentOption])
 def departments(db: SessionDep, _: CurrentUser) -> list[Department]:
     return list(db.scalars(select(Department).order_by(Department.name)))
@@ -64,5 +72,13 @@ def assessment_templates(db: SessionDep, _: CurrentUser) -> list[AssessmentTempl
         select(AssessmentTemplate)
         .where(AssessmentTemplate.is_active)
         .order_by(AssessmentTemplate.name)
+    )
+    return list(db.scalars(stmt))
+
+
+@router.get("/rubrics", response_model=list[RubricOption])
+def rubrics(db: SessionDep, _: CurrentUser) -> list[RubricTemplate]:
+    stmt = (
+        select(RubricTemplate).where(RubricTemplate.is_active).order_by(RubricTemplate.name)
     )
     return list(db.scalars(stmt))

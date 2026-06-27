@@ -99,3 +99,48 @@ class AttemptStatus(StrEnum):
     IN_PROGRESS = "in_progress"
     SUBMITTED = "submitted"
     EXPIRED = "expired"
+
+
+class InterviewRound(StrEnum):
+    """Live interview rounds, each bound to a pipeline stage."""
+
+    L3_HR = "l3_hr"
+    L4_TECH1 = "l4_tech1"
+    L5_TECH2 = "l5_tech2"
+    L6_SALARY = "l6_salary"
+
+
+# Each interview round maps onto the pipeline stage it gates.
+ROUND_STAGE: dict[InterviewRound, Stage] = {
+    InterviewRound.L3_HR: Stage.L3_HR,
+    InterviewRound.L4_TECH1: Stage.L4_TECH1,
+    InterviewRound.L5_TECH2: Stage.L5_TECH2,
+    InterviewRound.L6_SALARY: Stage.L6_SALARY,
+}
+
+
+class InterviewMode(StrEnum):
+    ONLINE = "online"  # Teams meeting
+    IN_PERSON = "in_person"
+    PHONE = "phone"
+
+
+class InterviewStatus(StrEnum):
+    SCHEDULED = "scheduled"
+    RESCHEDULED = "rescheduled"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    NO_SHOW = "no_show"
+
+
+class ScorecardDecision(StrEnum):
+    STRONG_YES = "strong_yes"
+    YES = "yes"
+    NO = "no"
+    STRONG_NO = "strong_no"
+
+
+# Decisions that pass the candidate to the next stage; the rest reject.
+POSITIVE_DECISIONS: frozenset[ScorecardDecision] = frozenset(
+    {ScorecardDecision.STRONG_YES, ScorecardDecision.YES}
+)
