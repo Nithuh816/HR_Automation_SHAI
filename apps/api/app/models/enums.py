@@ -93,6 +93,7 @@ class MagicLinkScope(StrEnum):
     L1_APPLY = "l1_apply"
     L2_ASSESSMENT = "l2_assessment"
     OFFER = "offer"
+    DOC_UPLOAD = "doc_upload"
 
 
 class AttemptStatus(StrEnum):
@@ -155,3 +156,29 @@ class OfferStatus(StrEnum):
     ACCEPTED = "accepted"
     DECLINED = "declined"
     REVOKED = "revoked"  # withdrawn internally after sending
+
+
+class ChecklistType(StrEnum):
+    FRESHER = "fresher"
+    EXPERIENCED = "experienced"
+
+
+class DocumentType(StrEnum):
+    AADHAAR = "aadhaar"
+    PAN = "pan"
+    RESUME = "resume"
+    MARKSHEET = "marksheet"
+    EXPERIENCE_LETTER = "experience_letter"
+    RELIEVING_LETTER = "relieving_letter"
+    PAYSLIP = "payslip"
+    PHOTO = "photo"
+    BANK_PROOF = "bank_proof"
+    OTHER = "other"
+
+
+class DocumentStatus(StrEnum):
+    PENDING = "pending"  # uploaded, awaiting auto/human check
+    EXTRACTED = "extracted"  # auto-extraction succeeded, awaiting verification
+    NEEDS_REVIEW = "needs_review"  # low/no confidence -> manual queue
+    VERIFIED = "verified"  # a human confirmed it
+    REJECTED = "rejected"

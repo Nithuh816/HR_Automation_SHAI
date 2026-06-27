@@ -7,11 +7,14 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
 
+from app.core import pii
 from app.deps import SessionDep
+from app.integrations.storage import get_storage
 from app.models.assessment import (
     AssessmentAnswer,
     AssessmentAttempt,
@@ -22,9 +25,12 @@ from app.models.candidate import (
     Candidate,
     CandidateApplication,
 )
+from app.models.document import Document, DocumentChecklist
 from app.models.enums import (
     ApplicationStatus,
     AttemptStatus,
+    ChecklistType,
+    DocumentType,
     MagicLinkScope,
     OfferStatus,
     Stage,
@@ -38,6 +44,11 @@ from app.schemas.assessment import (
     PublicQuestion,
 )
 from app.schemas.candidate import L1Context, L1Submit
+from app.schemas.document import (
+    ChecklistItemPublic,
+    DocUploadContext,
+    UploadedDocPublic,
+)
 from app.schemas.offer import (
     OfferDeclineRequest,
     OfferPublicContext,
@@ -45,6 +56,14 @@ from app.schemas.offer import (
     SalaryComponent,
 )
 from app.services import assessments, magic_links, offers, pipeline
+from app.services import documents as doc_svc
+
+CONSENT_TEXT = (
+    "I confirm the documents I upload are genuine and belong to me, and I consent "
+    "to SHAI Health processing them for recruitment and onboarding under its privacy "
+    "policy (DPDPA, 2023)."
+)
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 router = APIRouter(prefix="/api/v1/c", tags=["candidate-portal"])
 
@@ -265,3 +284,88 @@ def decline_offer(
     magic_links.consume(link)
     db.commit()
     return OfferResponseResult(status=offer.status)
+
+
+def _checklist_type(candidate: Candidate) -> ChecklistType:
+    return ChecklistType.FRESHER if candidate.is_fresher else ChecklistType.EXPERIENCED
+
+
+def _upload_context(db: SessionDep, candidate: Candidate) -> DocUploadContext:
+    ctype = _checklist_type(candidate)
+    items = db.scalars(
+        select(DocumentChecklist)
+        .where(DocumentChecklist.checklist_type == ctype)
+        .order_by(DocumentChecklist.position)
+    )
+    uploaded = db.scalars(
+        select(Document)
+        .where(Document.candidate_id == candidate.id)
+        .order_by(Document.id.desc())
+    )
+    return DocUploadContext(
+        candidate_name=candidate.name,
+        checklist_type=ctype,
+        consent_text=CONSENT_TEXT,
+        items=[
+            ChecklistItemPublic(
+                document_type=i.document_type, label=i.label, required=i.required
+            )
+            for i in items
+        ],
+        uploaded=[
+            UploadedDocPublic(
+                id=d.id,
+                document_type=d.document_type,
+                original_filename=d.original_filename,
+                status=d.status,
+            )
+            for d in uploaded
+        ],
+    )
+
+
+@router.get("/upload/{token}", response_model=DocUploadContext)
+def get_upload_portal(token: str, db: SessionDep) -> DocUploadContext:
+    _, candidate, _ = _resolve(db, token, MagicLinkScope.DOC_UPLOAD)
+    return _upload_context(db, candidate)
+
+
+@router.post("/upload/{token}", response_model=DocUploadContext)
+async def upload_document(
+    token: str,
+    db: SessionDep,
+    document_type: Annotated[DocumentType, Form()],
+    consent: Annotated[bool, Form()],
+    file: Annotated[UploadFile, File()],
+) -> DocUploadContext:
+    app, candidate, _ = _resolve(db, token, MagicLinkScope.DOC_UPLOAD)
+    if not consent:
+        raise HTTPException(status_code=422, detail="consent is required to upload")
+    body = await file.read()
+    if not body:
+        raise HTTPException(status_code=422, detail="empty file")
+    if len(body) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="file too large (max 10 MB)")
+
+    content_type = file.content_type or "application/octet-stream"
+    analysis = doc_svc.analyze(document_type, content_type, body)
+    doc = Document(
+        candidate_id=candidate.id,
+        application_id=app.id,
+        document_type=document_type,
+        original_filename=file.filename or "upload",
+        storage_key="",
+        content_type=content_type,
+        size_bytes=len(body),
+        status=analysis.status,
+        extracted_json=doc_svc.dump_extracted(analysis.extracted),
+        aadhaar_enc=pii.encrypt(analysis.aadhaar),
+        pan_enc=pii.encrypt(analysis.pan),
+    )
+    db.add(doc)
+    db.flush()  # assigns doc.id for the storage key
+    doc.storage_key = doc_svc.storage_key(candidate.id, doc.id, doc.original_filename)
+    get_storage().put(doc.storage_key, body, content_type)
+    # The upload link is intentionally multi-use until it expires.
+    db.commit()
+    return _upload_context(db, candidate)

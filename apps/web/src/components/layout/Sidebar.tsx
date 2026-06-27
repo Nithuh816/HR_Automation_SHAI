@@ -5,6 +5,7 @@ import {
   ClipboardList,
   FileSignature,
   FileText,
+  FolderCheck,
   Inbox,
   LayoutDashboard,
   ListChecks,
@@ -77,6 +78,10 @@ export function Sidebar(): JSX.Element {
             <NavLink to="/settings/offer-templates" className={linkClass}>
               <FileSignature className="h-4 w-4" />
               <span>Offer templates</span>
+            </NavLink>
+            <NavLink to="/settings/checklists" className={linkClass}>
+              <FolderCheck className="h-4 w-4" />
+              <span>Doc checklists</span>
             </NavLink>
           </>
         )}

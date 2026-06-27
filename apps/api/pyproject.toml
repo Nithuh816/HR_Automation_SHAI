@@ -75,6 +75,9 @@ module = [
   "boto3.*",
   "botocore.*",
   "weasyprint.*",
+  "pytesseract.*",
+  "PIL.*",
+  "pdfplumber.*",
 ]
 ignore_missing_imports = true
 

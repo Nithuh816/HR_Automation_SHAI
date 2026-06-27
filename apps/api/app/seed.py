@@ -19,7 +19,16 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.models.assessment import AssessmentTemplate, Question, TemplateQuestion
 from app.models.department import Department
-from app.models.enums import InterviewRound, RequisitionStatus, Role, Team, Urgency
+from app.models.document import DocumentChecklist
+from app.models.enums import (
+    ChecklistType,
+    DocumentType,
+    InterviewRound,
+    RequisitionStatus,
+    Role,
+    Team,
+    Urgency,
+)
 from app.models.interview import RubricCriterion, RubricTemplate
 from app.models.offer import OfferTemplate
 from app.models.requisition import Requisition
@@ -125,6 +134,7 @@ def run(db: Session) -> None:
     _seed_sample_assessment(db, user_ids)
     _seed_sample_rubrics(db, user_ids)
     _seed_sample_offer_template(db, user_ids)
+    _seed_document_checklists(db)
 
 
 # Demo requisitions (title, department, headcount, urgency, recruiter name | None).
@@ -285,6 +295,44 @@ def _seed_sample_offer_template(db: Session, user_ids: dict[str, int]) -> None:
             created_by_id=user_ids.get("Balaji P"),
         )
     )
+    db.commit()
+
+
+# Onboarding document checklists. (document_type, label, required)
+_COMMON_DOCS: list[tuple[DocumentType, str, bool]] = [
+    (DocumentType.AADHAAR, "Aadhaar card", True),
+    (DocumentType.PAN, "PAN card", True),
+    (DocumentType.PHOTO, "Passport-size photo", True),
+    (DocumentType.BANK_PROOF, "Cancelled cheque / bank passbook", True),
+    (DocumentType.RESUME, "Updated résumé", True),
+    (DocumentType.MARKSHEET, "Highest qualification marksheet", True),
+]
+_EXPERIENCED_EXTRA: list[tuple[DocumentType, str, bool]] = [
+    (DocumentType.RELIEVING_LETTER, "Relieving letter (last employer)", True),
+    (DocumentType.EXPERIENCE_LETTER, "Experience letter", True),
+    (DocumentType.PAYSLIP, "Last 3 months' payslips", False),
+]
+
+
+def _seed_document_checklists(db: Session) -> None:
+    if db.scalar(select(func.count()).select_from(DocumentChecklist)):
+        return
+    fresher = _COMMON_DOCS
+    experienced = _COMMON_DOCS + _EXPERIENCED_EXTRA
+    for ctype, items in (
+        (ChecklistType.FRESHER, fresher),
+        (ChecklistType.EXPERIENCED, experienced),
+    ):
+        for position, (doc_type, label, required) in enumerate(items):
+            db.add(
+                DocumentChecklist(
+                    checklist_type=ctype,
+                    document_type=doc_type,
+                    label=label,
+                    required=required,
+                    position=position,
+                )
+            )
     db.commit()
 
 

@@ -12,8 +12,10 @@ from app.routers import (
     auth,
     candidate_portal,
     candidates,
+    checklists,
     dashboard,
     departments,
+    documents,
     health,
     interviews,
     lookups,
@@ -76,6 +78,8 @@ def create_app() -> FastAPI:
     app.include_router(interviews.router)
     app.include_router(offer_templates.router)
     app.include_router(offers.router)
+    app.include_router(checklists.router)
+    app.include_router(documents.router)
     app.include_router(candidate_portal.router)
     return app
 

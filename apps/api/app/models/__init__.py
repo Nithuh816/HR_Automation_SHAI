@@ -18,10 +18,14 @@ from app.models.candidate import (
     MagicLink,
 )
 from app.models.department import Department
+from app.models.document import Document, DocumentChecklist
 from app.models.enums import (
     ApplicationStatus,
     AttemptStatus,
     CandidateSource,
+    ChecklistType,
+    DocumentStatus,
+    DocumentType,
     InterviewMode,
     InterviewRound,
     InterviewStatus,
@@ -55,7 +59,12 @@ __all__ = [
     "Candidate",
     "CandidateApplication",
     "CandidateSource",
+    "ChecklistType",
     "Department",
+    "Document",
+    "DocumentChecklist",
+    "DocumentStatus",
+    "DocumentType",
     "Interview",
     "InterviewMode",
     "InterviewRound",

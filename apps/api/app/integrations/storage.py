@@ -69,16 +69,18 @@ class S3CompatibleStorage(ObjectStorage):
 
     def get(self, key: str) -> bytes:
         obj = self._client.get_object(Bucket=self._bucket, Key=key)
-        return obj["Body"].read()
+        return bytes(obj["Body"].read())
 
     def delete(self, key: str) -> None:
         self._client.delete_object(Bucket=self._bucket, Key=key)
 
     def presigned_get(self, key: str, ttl_seconds: int | None = None) -> str:
-        return self._client.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": self._bucket, "Key": key},
-            ExpiresIn=ttl_seconds or settings.s3_presign_ttl_seconds,
+        return str(
+            self._client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self._bucket, "Key": key},
+                ExpiresIn=ttl_seconds or settings.s3_presign_ttl_seconds,
+            )
         )
 
 

@@ -13,7 +13,8 @@ from sqlalchemy import select
 from app.deps import CurrentUser, SessionDep
 from app.models.assessment import AssessmentTemplate
 from app.models.department import Department
-from app.models.enums import InterviewRound, Role
+from app.models.document import DocumentChecklist
+from app.models.enums import ChecklistType, DocumentType, InterviewRound, Role
 from app.models.interview import RubricTemplate
 from app.models.offer import OfferTemplate
 from app.models.user import User
@@ -88,4 +89,24 @@ def rubrics(db: SessionDep, _: CurrentUser) -> list[RubricTemplate]:
 @router.get("/offer-templates", response_model=list[TemplateOption])
 def offer_templates(db: SessionDep, _: CurrentUser) -> list[OfferTemplate]:
     stmt = select(OfferTemplate).where(OfferTemplate.is_active).order_by(OfferTemplate.name)
+    return list(db.scalars(stmt))
+
+
+class ChecklistItemOption(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    document_type: DocumentType
+    label: str
+    required: bool
+
+
+@router.get("/checklist", response_model=list[ChecklistItemOption])
+def checklist(
+    db: SessionDep, _: CurrentUser, checklist_type: ChecklistType
+) -> list[DocumentChecklist]:
+    stmt = (
+        select(DocumentChecklist)
+        .where(DocumentChecklist.checklist_type == checklist_type)
+        .order_by(DocumentChecklist.position)
+    )
     return list(db.scalars(stmt))

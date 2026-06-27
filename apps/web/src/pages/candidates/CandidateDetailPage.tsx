@@ -77,7 +77,12 @@ export function CandidateDetailPage(): JSX.Element {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-xl font-semibold">{c.name}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">{c.name}</h1>
+        <Button variant="outline" size="sm" asChild>
+          <Link to={`/candidates/${candidateId}/documents`}>Documents</Link>
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>

@@ -6,6 +6,10 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("APP_ENV", "development")
 os.environ.setdefault("APP_SECRET_KEY", "test-secret")
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
+# A throwaway Fernet key so PII-column encryption works under test.
+os.environ.setdefault("PII_ENC_KEY", "pibE2wQxwviWG-XyCs06JmkmvRELomZly4pPz2NvMQo=")
+# Keep document uploads on local-fs during tests (no MinIO/S3).
+os.environ.setdefault("STORAGE_BACKEND", "local")
 
 
 @pytest.fixture()
