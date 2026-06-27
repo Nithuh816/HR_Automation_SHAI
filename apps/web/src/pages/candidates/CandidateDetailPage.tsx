@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import {
   fetchRubricOptions,
   scheduleInterview,
 } from "@/lib/interviews";
+import { createOffer } from "@/lib/offers";
 
 const CAN_EDIT = ["hr_head", "ta_tl", "ta_recruiter"];
 
@@ -32,6 +33,7 @@ export function CandidateDetailPage(): JSX.Element {
   const { id } = useParams();
   const candidateId = Number(id);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [link, setLink] = useState<string | null>(null);
   const [tplByApp, setTplByApp] = useState<Record<number, string>>({});
 
@@ -56,6 +58,14 @@ export function CandidateDetailPage(): JSX.Element {
     mutationFn: ({ appId, templateId }: { appId: number; templateId: number }) =>
       issueAssessment(appId, templateId),
     onSuccess: (res) => setLink(res.url),
+  });
+  const buildOffer = useMutation({
+    mutationFn: (appId: number) =>
+      createOffer(appId, {
+        annual_ctc: cand.data?.expected_ctc ?? 600000,
+        joining_date: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
+      }),
+    onSuccess: (offer) => navigate(`/offers/${offer.id}`),
   });
 
   if (cand.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -168,6 +178,14 @@ export function CandidateDetailPage(): JSX.Element {
                         }
                       >
                         Send L2
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={buildOffer.isPending}
+                        onClick={() => buildOffer.mutate(a.id)}
+                      >
+                        Build offer
                       </Button>
                     </>
                   )}

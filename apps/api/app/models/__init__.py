@@ -26,6 +26,7 @@ from app.models.enums import (
     InterviewRound,
     InterviewStatus,
     MagicLinkScope,
+    OfferStatus,
     RequisitionStatus,
     Role,
     ScorecardDecision,
@@ -40,6 +41,7 @@ from app.models.interview import (
     Scorecard,
     ScorecardScore,
 )
+from app.models.offer import Offer, OfferTemplate
 from app.models.requisition import Requisition, RequisitionComment
 from app.models.user import User
 
@@ -60,6 +62,9 @@ __all__ = [
     "InterviewStatus",
     "MagicLink",
     "MagicLinkScope",
+    "Offer",
+    "OfferStatus",
+    "OfferTemplate",
     "Question",
     "Requisition",
     "RequisitionComment",

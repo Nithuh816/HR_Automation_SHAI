@@ -74,6 +74,7 @@ module = [
   "msal.*",
   "boto3.*",
   "botocore.*",
+  "weasyprint.*",
 ]
 ignore_missing_imports = true
 

@@ -17,6 +17,8 @@ from app.routers import (
     health,
     interviews,
     lookups,
+    offer_templates,
+    offers,
     requisitions,
     rubrics,
     users,
@@ -72,6 +74,8 @@ def create_app() -> FastAPI:
     app.include_router(assessments.router)
     app.include_router(rubrics.router)
     app.include_router(interviews.router)
+    app.include_router(offer_templates.router)
+    app.include_router(offers.router)
     app.include_router(candidate_portal.router)
     return app
 

@@ -3,6 +3,7 @@ import {
   CalendarClock,
   ClipboardCheck,
   ClipboardList,
+  FileSignature,
   FileText,
   Inbox,
   LayoutDashboard,
@@ -72,6 +73,10 @@ export function Sidebar(): JSX.Element {
             <NavLink to="/settings/rubrics" className={linkClass}>
               <ListChecks className="h-4 w-4" />
               <span>Rubrics</span>
+            </NavLink>
+            <NavLink to="/settings/offer-templates" className={linkClass}>
+              <FileSignature className="h-4 w-4" />
+              <span>Offer templates</span>
             </NavLink>
           </>
         )}

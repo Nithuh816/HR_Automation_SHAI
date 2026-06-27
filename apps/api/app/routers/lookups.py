@@ -15,6 +15,7 @@ from app.models.assessment import AssessmentTemplate
 from app.models.department import Department
 from app.models.enums import InterviewRound, Role
 from app.models.interview import RubricTemplate
+from app.models.offer import OfferTemplate
 from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/lookups", tags=["lookups"])
@@ -81,4 +82,10 @@ def rubrics(db: SessionDep, _: CurrentUser) -> list[RubricTemplate]:
     stmt = (
         select(RubricTemplate).where(RubricTemplate.is_active).order_by(RubricTemplate.name)
     )
+    return list(db.scalars(stmt))
+
+
+@router.get("/offer-templates", response_model=list[TemplateOption])
+def offer_templates(db: SessionDep, _: CurrentUser) -> list[OfferTemplate]:
+    stmt = select(OfferTemplate).where(OfferTemplate.is_active).order_by(OfferTemplate.name)
     return list(db.scalars(stmt))

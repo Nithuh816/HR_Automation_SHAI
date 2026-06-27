@@ -22,7 +22,14 @@ from app.models.candidate import (
     Candidate,
     CandidateApplication,
 )
-from app.models.enums import AttemptStatus, MagicLinkScope, Stage
+from app.models.enums import (
+    ApplicationStatus,
+    AttemptStatus,
+    MagicLinkScope,
+    OfferStatus,
+    Stage,
+)
+from app.models.offer import Offer, OfferTemplate
 from app.models.requisition import Requisition
 from app.schemas.assessment import (
     AssessmentContext,
@@ -31,7 +38,13 @@ from app.schemas.assessment import (
     PublicQuestion,
 )
 from app.schemas.candidate import L1Context, L1Submit
-from app.services import assessments, magic_links
+from app.schemas.offer import (
+    OfferDeclineRequest,
+    OfferPublicContext,
+    OfferResponseResult,
+    SalaryComponent,
+)
+from app.services import assessments, magic_links, offers, pipeline
 
 router = APIRouter(prefix="/api/v1/c", tags=["candidate-portal"])
 
@@ -173,3 +186,82 @@ def submit_assessment(token: str, payload: AssessmentSubmit, db: SessionDep) -> 
     magic_links.consume(link)
     db.commit()
     return AssessmentResult(score_pct=score_pct, passed=passed)
+
+
+def _offer_for(db: SessionDep, application_id: int) -> Offer:
+    """The most recent offer issued on this application."""
+    offer = db.scalar(
+        select(Offer)
+        .where(Offer.application_id == application_id)
+        .order_by(Offer.id.desc())
+    )
+    if offer is None:
+        raise HTTPException(status_code=404, detail="no offer for this link")
+    return offer
+
+
+def _build_offer_context(db: SessionDep, candidate: Candidate, offer: Offer) -> OfferPublicContext:
+    template = db.get(OfferTemplate, offer.template_id) if offer.template_id else None
+    subject = template.subject if template else f"Offer of Employment — {offer.designation}"
+    body_md = template.body_md if template else offers.DEFAULT_TEMPLATE_BODY
+    body = offers.render_letter_body(
+        body_md,
+        candidate_name=candidate.name,
+        designation=offer.designation,
+        annual_ctc=offer.annual_ctc,
+        joining_date=offer.joining_date,
+    )
+    components = offers.load_components(offer.components_json)
+    html = offers.render_letter_html(subject=subject, body=body, components=components)
+    return OfferPublicContext(
+        candidate_name=candidate.name,
+        designation=offer.designation,
+        employer=offers.EMPLOYER_NAME,
+        annual_ctc=offer.annual_ctc,
+        joining_date=offer.joining_date,
+        components=[SalaryComponent(**c) for c in components],
+        subject=subject,
+        letter_html=html,
+        status=offer.status,
+        already_responded=offer.status in (OfferStatus.ACCEPTED, OfferStatus.DECLINED),
+    )
+
+
+@router.get("/offer/{token}", response_model=OfferPublicContext)
+def get_offer(token: str, db: SessionDep) -> OfferPublicContext:
+    app, candidate, _ = _resolve(db, token, MagicLinkScope.OFFER)
+    return _build_offer_context(db, candidate, _offer_for(db, app.id))
+
+
+@router.post("/offer/{token}/accept", response_model=OfferResponseResult)
+def accept_offer(token: str, db: SessionDep) -> OfferResponseResult:
+    app, _, _ = _resolve(db, token, MagicLinkScope.OFFER)
+    offer = _offer_for(db, app.id)
+    if offer.status != OfferStatus.SENT:
+        raise HTTPException(status_code=409, detail="this offer can no longer be accepted")
+    offer.status = OfferStatus.ACCEPTED
+    offer.responded_at = datetime.now(UTC)
+    link = magic_links.verify(db, token, MagicLinkScope.OFFER)
+    magic_links.consume(link)
+    db.commit()
+    return OfferResponseResult(status=offer.status)
+
+
+@router.post("/offer/{token}/decline", response_model=OfferResponseResult)
+def decline_offer(
+    token: str, payload: OfferDeclineRequest, db: SessionDep
+) -> OfferResponseResult:
+    app, _, _ = _resolve(db, token, MagicLinkScope.OFFER)
+    offer = _offer_for(db, app.id)
+    if offer.status != OfferStatus.SENT:
+        raise HTTPException(status_code=409, detail="this offer can no longer be declined")
+    offer.status = OfferStatus.DECLINED
+    offer.responded_at = datetime.now(UTC)
+    offer.decline_reason = payload.reason
+    # Declining an offer ends the application.
+    if app.status == ApplicationStatus.ACTIVE:
+        pipeline.reject(app, payload.reason or "Offer declined by candidate")
+    link = magic_links.verify(db, token, MagicLinkScope.OFFER)
+    magic_links.consume(link)
+    db.commit()
+    return OfferResponseResult(status=offer.status)

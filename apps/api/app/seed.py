@@ -21,6 +21,7 @@ from app.models.assessment import AssessmentTemplate, Question, TemplateQuestion
 from app.models.department import Department
 from app.models.enums import InterviewRound, RequisitionStatus, Role, Team, Urgency
 from app.models.interview import RubricCriterion, RubricTemplate
+from app.models.offer import OfferTemplate
 from app.models.requisition import Requisition
 from app.models.user import User
 from app.services.requisitions import make_code
@@ -123,6 +124,7 @@ def run(db: Session) -> None:
     _seed_sample_requisitions(db, dept_ids, user_ids)
     _seed_sample_assessment(db, user_ids)
     _seed_sample_rubrics(db, user_ids)
+    _seed_sample_offer_template(db, user_ids)
 
 
 # Demo requisitions (title, department, headcount, urgency, recruiter name | None).
@@ -250,6 +252,39 @@ def _seed_sample_rubrics(db: Session, user_ids: dict[str, int]) -> None:
                     position=position,
                 )
             )
+    db.commit()
+
+
+OFFER_LETTER_BODY = """\
+Dear {{ candidate_name }},
+
+We are pleased to offer you the position of **{{ designation }}** at {{ employer }}.
+
+Your annual cost to company (CTC) will be **₹{{ "{:,}".format(annual_ctc) }}**, effective
+from your date of joining, **{{ joining_date }}**.
+
+This offer is contingent on successful background verification and submission of the
+documents listed in your onboarding checklist. Please review the compensation breakdown
+below and confirm your acceptance.
+
+We are excited about the prospect of you joining us.
+
+Warm regards,
+Talent Acquisition, {{ employer }}
+"""
+
+
+def _seed_sample_offer_template(db: Session, user_ids: dict[str, int]) -> None:
+    if db.scalar(select(func.count()).select_from(OfferTemplate)):
+        return
+    db.add(
+        OfferTemplate(
+            name="Standard Offer (Coding)",
+            subject="Offer of Employment — SHAI Health",
+            body_md=OFFER_LETTER_BODY,
+            created_by_id=user_ids.get("Balaji P"),
+        )
+    )
     db.commit()
 
 

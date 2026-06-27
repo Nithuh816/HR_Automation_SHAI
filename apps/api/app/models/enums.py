@@ -92,6 +92,7 @@ class CandidateSource(StrEnum):
 class MagicLinkScope(StrEnum):
     L1_APPLY = "l1_apply"
     L2_ASSESSMENT = "l2_assessment"
+    OFFER = "offer"
 
 
 class AttemptStatus(StrEnum):
@@ -144,3 +145,13 @@ class ScorecardDecision(StrEnum):
 POSITIVE_DECISIONS: frozenset[ScorecardDecision] = frozenset(
     {ScorecardDecision.STRONG_YES, ScorecardDecision.YES}
 )
+
+
+class OfferStatus(StrEnum):
+    DRAFT = "draft"  # being built by a recruiter
+    PENDING_APPROVAL = "pending_approval"  # awaiting HR Head sign-off
+    APPROVED = "approved"  # signed off, ready to send
+    SENT = "sent"  # delivered to the candidate (magic link live)
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+    REVOKED = "revoked"  # withdrawn internally after sending

@@ -14,13 +14,17 @@ import { InterviewsTodayPage } from "@/pages/interviews/InterviewsTodayPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { PipelineBoardPage } from "@/pages/pipeline/PipelineBoardPage";
 import { PipelineChooserPage } from "@/pages/pipeline/PipelineChooserPage";
+import { OffersListPage } from "@/pages/offers/OffersListPage";
+import { OfferDetailPage } from "@/pages/offers/OfferDetailPage";
 import { L1ApplyPage } from "@/pages/portal/L1ApplyPage";
 import { L2AssessmentPage } from "@/pages/portal/L2AssessmentPage";
+import { OfferPage } from "@/pages/portal/OfferPage";
 import { RequisitionDetailPage } from "@/pages/requisitions/RequisitionDetailPage";
 import { RequisitionInboxPage } from "@/pages/requisitions/RequisitionInboxPage";
 import { RequisitionNewPage } from "@/pages/requisitions/RequisitionNewPage";
 import { RequisitionsListPage } from "@/pages/requisitions/RequisitionsListPage";
 import { DepartmentsPage } from "@/pages/settings/DepartmentsPage";
+import { OfferTemplatesPage } from "@/pages/settings/OfferTemplatesPage";
 import { RubricDetailPage } from "@/pages/settings/RubricDetailPage";
 import { RubricsPage } from "@/pages/settings/RubricsPage";
 import { UsersPage } from "@/pages/settings/UsersPage";
@@ -30,6 +34,7 @@ export const router = createBrowserRouter([
   // Candidate-facing, no auth.
   { path: "/c/apply/:token", element: <L1ApplyPage /> },
   { path: "/c/assessment/:token", element: <L2AssessmentPage /> },
+  { path: "/c/offer/:token", element: <OfferPage /> },
   {
     path: "/",
     element: <RequireAuth />,
@@ -55,8 +60,10 @@ export const router = createBrowserRouter([
       { path: "interviews/:id", element: <InterviewDetailPage /> },
       { path: "settings/rubrics", element: <RubricsPage /> },
       { path: "settings/rubrics/:id", element: <RubricDetailPage /> },
+      { path: "offers", element: <OffersListPage /> },
+      { path: "offers/:id", element: <OfferDetailPage /> },
+      { path: "settings/offer-templates", element: <OfferTemplatesPage /> },
       // Stubs — pages added per-milestone.
-      { path: "offers", element: <ComingSoon name="Offers (M6)" /> },
       { path: "onboarding/queue", element: <ComingSoon name="Onboarding queue (M8)" /> },
     ],
   },
