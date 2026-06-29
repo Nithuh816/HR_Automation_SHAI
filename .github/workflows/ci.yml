@@ -51,7 +51,9 @@ jobs:
       - name: Tests
         env:
           APP_SECRET_KEY: test-secret
-          PII_ENC_KEY: ""
+          # Throwaway Fernet key so PII-column encryption works under test
+          # (matches the default in tests/conftest.py).
+          PII_ENC_KEY: pibE2wQxwviWG-XyCs06JmkmvRELomZly4pPz2NvMQo=
           DATABASE_URL: sqlite:///./test.db
         run: pytest -q
 
