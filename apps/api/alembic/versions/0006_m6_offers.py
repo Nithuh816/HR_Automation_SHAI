@@ -17,6 +17,8 @@ down_revision: str | None = "0005_m5_interviews"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+# _create_events=False: the type is created explicitly in upgrade(); this stops
+# op.create_table from re-emitting CREATE TYPE (Postgres rejects the duplicate).
 OFFER_STATUS_ENUM = sa.Enum(
     "DRAFT",
     "PENDING_APPROVAL",
@@ -26,6 +28,7 @@ OFFER_STATUS_ENUM = sa.Enum(
     "DECLINED",
     "REVOKED",
     name="offer_status_enum",
+    _create_events=False,
 )
 
 

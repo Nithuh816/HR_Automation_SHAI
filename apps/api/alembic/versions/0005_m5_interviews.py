@@ -17,15 +17,26 @@ down_revision: str | None = "0004_m4_assessments"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+# _create_events=False: these types are created explicitly in upgrade(); it stops
+# op.create_table from re-emitting CREATE TYPE for a type used by >1 table
+# (Postgres rejects the duplicate).
 INTERVIEW_ROUND_ENUM = sa.Enum(
-    "L3_HR", "L4_TECH1", "L5_TECH2", "L6_SALARY", name="interview_round_enum"
+    "L3_HR", "L4_TECH1", "L5_TECH2", "L6_SALARY",
+    name="interview_round_enum",
+    _create_events=False,
 )
-INTERVIEW_MODE_ENUM = sa.Enum("ONLINE", "IN_PERSON", "PHONE", name="interview_mode_enum")
+INTERVIEW_MODE_ENUM = sa.Enum(
+    "ONLINE", "IN_PERSON", "PHONE", name="interview_mode_enum", _create_events=False
+)
 INTERVIEW_STATUS_ENUM = sa.Enum(
-    "SCHEDULED", "RESCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW", name="interview_status_enum"
+    "SCHEDULED", "RESCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW",
+    name="interview_status_enum",
+    _create_events=False,
 )
 SCORECARD_DECISION_ENUM = sa.Enum(
-    "STRONG_YES", "YES", "NO", "STRONG_NO", name="scorecard_decision_enum"
+    "STRONG_YES", "YES", "NO", "STRONG_NO",
+    name="scorecard_decision_enum",
+    _create_events=False,
 )
 
 

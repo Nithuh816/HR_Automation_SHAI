@@ -17,19 +17,24 @@ down_revision: str | None = "0002_m2_requisitions"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+# These enum types are created explicitly in upgrade() via ``.create(checkfirst=True)``.
+# ``_create_events=False`` stops ``op.create_table`` from emitting a *second* CREATE TYPE
+# for the same type, which Postgres rejects ("type ... already exists").
 SOURCE_ENUM = sa.Enum(
     "LINKEDIN", "NAUKRI", "REFERRAL", "INSTITUTION", "COLD_CALL", "OTHER",
     name="candidate_source_enum",
+    _create_events=False,
 )
 STAGE_ENUM = sa.Enum(
     "SOURCED", "L1_APPLICATION", "L2_ASSESSMENT", "L3_HR", "L4_TECH1",
     "L5_TECH2", "L6_SALARY", "OFFER", "JOINED",
     name="stage_enum",
+    _create_events=False,
 )
 APP_STATUS_ENUM = sa.Enum(
-    "ACTIVE", "REJECTED", "WITHDRAWN", name="application_status_enum"
+    "ACTIVE", "REJECTED", "WITHDRAWN", name="application_status_enum", _create_events=False
 )
-SCOPE_ENUM = sa.Enum("L1_APPLY", name="magic_link_scope_enum")
+SCOPE_ENUM = sa.Enum("L1_APPLY", name="magic_link_scope_enum", _create_events=False)
 
 
 def _stage(create: bool) -> sa.Enum:

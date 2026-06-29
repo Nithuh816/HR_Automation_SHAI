@@ -17,8 +17,12 @@ down_revision: str | None = "0003_m3_candidates"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+# _create_events=False: the type is created explicitly in upgrade(); this stops
+# op.create_table from re-emitting CREATE TYPE (Postgres rejects the duplicate).
 ATTEMPT_STATUS_ENUM = sa.Enum(
-    "NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "EXPIRED", name="attempt_status_enum"
+    "NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "EXPIRED",
+    name="attempt_status_enum",
+    _create_events=False,
 )
 
 

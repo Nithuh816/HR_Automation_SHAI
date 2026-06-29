@@ -17,7 +17,12 @@ down_revision: str | None = "0006_m6_offers"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-CHECKLIST_TYPE_ENUM = sa.Enum("FRESHER", "EXPERIENCED", name="checklist_type_enum")
+# _create_events=False: these types are created explicitly in upgrade(); it stops
+# op.create_table from re-emitting CREATE TYPE for a type used by >1 table
+# (Postgres rejects the duplicate).
+CHECKLIST_TYPE_ENUM = sa.Enum(
+    "FRESHER", "EXPERIENCED", name="checklist_type_enum", _create_events=False
+)
 DOCUMENT_TYPE_ENUM = sa.Enum(
     "AADHAAR",
     "PAN",
@@ -30,9 +35,12 @@ DOCUMENT_TYPE_ENUM = sa.Enum(
     "BANK_PROOF",
     "OTHER",
     name="document_type_enum",
+    _create_events=False,
 )
 DOCUMENT_STATUS_ENUM = sa.Enum(
-    "PENDING", "EXTRACTED", "NEEDS_REVIEW", "VERIFIED", "REJECTED", name="document_status_enum"
+    "PENDING", "EXTRACTED", "NEEDS_REVIEW", "VERIFIED", "REJECTED",
+    name="document_status_enum",
+    _create_events=False,
 )
 
 
