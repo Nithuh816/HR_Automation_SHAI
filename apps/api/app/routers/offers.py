@@ -27,7 +27,7 @@ from app.schemas.offer import (
     OfferUpdate,
     SalaryComponent,
 )
-from app.services import magic_links, notifications, offers, pipeline
+from app.services import audit, magic_links, notifications, offers, pipeline
 
 router = APIRouter(prefix="/api/v1", tags=["offers"])
 
@@ -136,8 +136,17 @@ def create_offer(
         created_by_id=user.id,
     )
     db.add(offer)
+    db.flush()
     if STAGE_ORDER.index(Stage.OFFER) > STAGE_ORDER.index(app.stage):
         pipeline.set_stage(app, Stage.OFFER)
+    audit.record(
+        db,
+        actor=user,
+        action="offer.created",
+        entity_type="offer",
+        entity_id=offer.id,
+        summary=f"{offer.designation} · ₹{offer.annual_ctc:,}",
+    )
     db.commit()
     db.refresh(offer)
     return _detail(db, offer)
@@ -189,6 +198,7 @@ def submit_offer(offer_id: int, db: SessionDep, user: CurrentUser) -> OfferDetai
     if offer.status != OfferStatus.DRAFT:
         raise HTTPException(status_code=409, detail="offer is not a draft")
     offer.status = OfferStatus.PENDING_APPROVAL
+    audit.record(db, actor=user, action="offer.submitted", entity_type="offer", entity_id=offer.id)
     db.commit()
     db.refresh(offer)
     return _detail(db, offer)
@@ -211,6 +221,7 @@ def approve_offer(offer_id: int, db: SessionDep, user: CurrentUser) -> OfferDeta
         body=f"Your offer #{offer.id} was approved and is ready to send.",
         related_application_id=offer.application_id,
     )
+    audit.record(db, actor=user, action="offer.approved", entity_type="offer", entity_id=offer.id)
     db.commit()
     db.refresh(offer)
     return _detail(db, offer)
@@ -237,6 +248,7 @@ def send_offer(offer_id: int, db: SessionDep, user: CurrentUser) -> OfferSendRes
         designation=offer.designation,
         url=url,
     )
+    audit.record(db, actor=user, action="offer.sent", entity_type="offer", entity_id=offer.id)
     db.commit()
     db.refresh(offer)
     return OfferSendResult(
@@ -253,6 +265,7 @@ def revoke_offer(offer_id: int, db: SessionDep, user: CurrentUser) -> OfferDetai
     if offer.status not in (OfferStatus.SENT, OfferStatus.APPROVED):
         raise HTTPException(status_code=409, detail="only an unaccepted offer can be revoked")
     offer.status = OfferStatus.REVOKED
+    audit.record(db, actor=user, action="offer.revoked", entity_type="offer", entity_id=offer.id)
     db.commit()
     db.refresh(offer)
     return _detail(db, offer)

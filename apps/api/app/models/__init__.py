@@ -11,6 +11,7 @@ from app.models.assessment import (
     Question,
     TemplateQuestion,
 )
+from app.models.audit import AuditLog
 from app.models.candidate import (
     ApplicationFormL1,
     Candidate,
@@ -62,6 +63,7 @@ __all__ = [
     "AssessmentAttempt",
     "AssessmentTemplate",
     "AttemptStatus",
+    "AuditLog",
     "Candidate",
     "CandidateApplication",
     "CandidateSource",

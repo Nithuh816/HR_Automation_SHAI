@@ -28,8 +28,8 @@ from app.schemas.interview import (
     ScorecardScoreRead,
     ScorecardSubmit,
 )
+from app.services import audit, notifications, pipeline
 from app.services import interviews as svc
-from app.services import notifications, pipeline
 
 router = APIRouter(prefix="/api/v1", tags=["interviews"])
 
@@ -162,6 +162,16 @@ def schedule_interview(
             join_url=join_url,
         )
 
+    db.flush()
+    audit.record(
+        db,
+        actor=user,
+        action="interview.scheduled",
+        entity_type="interview",
+        entity_id=interview.id,
+        summary=f"{payload.round.value.upper()} · {interviewer.name}",
+        meta={"round": payload.round.value},
+    )
     db.commit()
     db.refresh(interview)
     return _detail(db, interview)
@@ -228,6 +238,13 @@ def reschedule_interview(
         interview.teams_join_url = graph.create_teams_meeting(
             subject, interview.scheduled_at, interview.duration_minutes
         )
+    audit.record(
+        db,
+        actor=user,
+        action="interview.rescheduled",
+        entity_type="interview",
+        entity_id=interview.id,
+    )
     db.commit()
     db.refresh(interview)
     return _detail(db, interview)
@@ -240,6 +257,13 @@ def cancel_interview(interview_id: int, db: SessionDep, user: CurrentUser) -> In
     if interview.status == InterviewStatus.COMPLETED:
         raise HTTPException(status_code=409, detail="completed interview cannot be cancelled")
     interview.status = InterviewStatus.CANCELLED
+    audit.record(
+        db,
+        actor=user,
+        action="interview.cancelled",
+        entity_type="interview",
+        entity_id=interview.id,
+    )
     db.commit()
     db.refresh(interview)
     return _detail(db, interview)
@@ -295,6 +319,15 @@ def submit_scorecard(
         else:
             pipeline.reject(app, payload.recommendation or payload.concerns)
 
+    audit.record(
+        db,
+        actor=user,
+        action="scorecard.submitted",
+        entity_type="interview",
+        entity_id=interview.id,
+        summary=f"{interview.round.value.upper()} — {payload.decision.value}",
+        meta={"decision": payload.decision.value, "overall_score": overall},
+    )
     db.commit()
     db.refresh(interview)
     return _detail(db, interview)

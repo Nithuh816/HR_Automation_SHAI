@@ -55,7 +55,7 @@ from app.schemas.offer import (
     OfferResponseResult,
     SalaryComponent,
 )
-from app.services import assessments, magic_links, offers, pipeline
+from app.services import assessments, audit, magic_links, offers, pipeline
 from app.services import consent as consent_svc
 from app.services import documents as doc_svc
 
@@ -117,6 +117,13 @@ def submit_l1_form(token: str, payload: L1Submit, db: SessionDep) -> L1Context:
     # Single-use: burn the link.
     link = magic_links.verify(db, token, MagicLinkScope.L1_APPLY)
     magic_links.consume(link)
+    audit.record(
+        db,
+        actor_label="candidate",
+        action="application.l1_submitted",
+        entity_type="application",
+        entity_id=app.id,
+    )
     db.commit()
 
     return L1Context(
@@ -204,6 +211,15 @@ def submit_assessment(token: str, payload: AssessmentSubmit, db: SessionDep) -> 
 
     link = magic_links.verify(db, token, MagicLinkScope.L2_ASSESSMENT)
     magic_links.consume(link)
+    audit.record(
+        db,
+        actor_label="candidate",
+        action="assessment.submitted",
+        entity_type="application",
+        entity_id=app.id,
+        summary=f"Scored {score_pct:.0f}% — {'passed' if passed else 'did not pass'}",
+        meta={"score_pct": score_pct, "passed": passed},
+    )
     db.commit()
     return AssessmentResult(score_pct=score_pct, passed=passed)
 
@@ -261,6 +277,13 @@ def accept_offer(token: str, db: SessionDep) -> OfferResponseResult:
     offer.responded_at = datetime.now(UTC)
     link = magic_links.verify(db, token, MagicLinkScope.OFFER)
     magic_links.consume(link)
+    audit.record(
+        db,
+        actor_label="candidate",
+        action="offer.accepted",
+        entity_type="offer",
+        entity_id=offer.id,
+    )
     db.commit()
     return OfferResponseResult(status=offer.status)
 
@@ -279,6 +302,14 @@ def decline_offer(token: str, payload: OfferDeclineRequest, db: SessionDep) -> O
         pipeline.reject(app, payload.reason or "Offer declined by candidate")
     link = magic_links.verify(db, token, MagicLinkScope.OFFER)
     magic_links.consume(link)
+    audit.record(
+        db,
+        actor_label="candidate",
+        action="offer.declined",
+        entity_type="offer",
+        entity_id=offer.id,
+        meta={"reason": payload.reason},
+    )
     db.commit()
     return OfferResponseResult(status=offer.status)
 
@@ -360,6 +391,14 @@ async def upload_document(
     db.flush()  # assigns doc.id for the storage key
     doc.storage_key = doc_svc.storage_key(candidate.id, doc.id, doc.original_filename)
     get_storage().put(doc.storage_key, body, content_type)
+    audit.record(
+        db,
+        actor_label="candidate",
+        action="document.uploaded",
+        entity_type="document",
+        entity_id=doc.id,
+        summary=document_type.value,
+    )
     # The upload link is intentionally multi-use until it expires.
     db.commit()
     return _upload_context(db, candidate)

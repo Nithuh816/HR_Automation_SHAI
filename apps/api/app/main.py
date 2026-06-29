@@ -9,6 +9,7 @@ from app.config import settings
 from app.routers import (
     applications,
     assessments,
+    audit,
     auth,
     candidate_portal,
     candidates,
@@ -84,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(onboarding.router)
     app.include_router(notifications.router)
     app.include_router(reports.router)
+    app.include_router(audit.router)
     app.include_router(checklists.router)
     app.include_router(documents.router)
     app.include_router(candidate_portal.router)

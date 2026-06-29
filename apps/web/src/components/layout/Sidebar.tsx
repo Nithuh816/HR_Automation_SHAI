@@ -11,6 +11,7 @@ import {
   Inbox,
   LayoutDashboard,
   ListChecks,
+  ScrollText,
   UserCog,
   UserPlus,
   Users,
@@ -35,6 +36,7 @@ const nav = [
 const adminNav = [
   { to: "/settings/users", label: "Users", icon: UserCog },
   { to: "/settings/departments", label: "Departments", icon: Building2 },
+  { to: "/settings/audit-log", label: "Audit log", icon: ScrollText },
 ];
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>

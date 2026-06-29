@@ -20,7 +20,7 @@ from app.schemas.candidate import (
     RejectRequest,
     StageMoveRequest,
 )
-from app.services import magic_links, pipeline
+from app.services import audit, magic_links, pipeline
 
 router = APIRouter(prefix="/api/v1", tags=["pipeline"])
 
@@ -68,6 +68,15 @@ def move_stage(
     if app.status != ApplicationStatus.ACTIVE:
         raise HTTPException(status_code=409, detail="application is not active")
     pipeline.set_stage(app, payload.stage)
+    audit.record(
+        db,
+        actor=user,
+        action="application.stage_changed",
+        entity_type="application",
+        entity_id=app.id,
+        summary=f"Moved to {payload.stage.value}",
+        meta={"stage": payload.stage.value},
+    )
     db.commit()
     db.refresh(app)
     return app
@@ -83,6 +92,15 @@ def reject_application(
     if app.status != ApplicationStatus.ACTIVE:
         raise HTTPException(status_code=409, detail="application is not active")
     pipeline.reject(app, payload.reason)
+    audit.record(
+        db,
+        actor=user,
+        action="application.rejected",
+        entity_type="application",
+        entity_id=app.id,
+        summary=f"Rejected at {app.stage.value}",
+        meta={"reason": payload.reason},
+    )
     db.commit()
     db.refresh(app)
     return app

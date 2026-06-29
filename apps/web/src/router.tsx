@@ -12,6 +12,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { HealthPage } from "@/pages/HealthPage";
 import { InterviewDetailPage } from "@/pages/interviews/InterviewDetailPage";
 import { InterviewsTodayPage } from "@/pages/interviews/InterviewsTodayPage";
+import { AuditLogPage } from "@/pages/settings/AuditLogPage";
 import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { PipelineBoardPage } from "@/pages/pipeline/PipelineBoardPage";
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
       { path: "onboarding/:id", element: <OnboardingDetailPage /> },
       { path: "notifications", element: <NotificationsPage /> },
       { path: "reports", element: <ReportsPage /> },
+      { path: "settings/audit-log", element: <AuditLogPage /> },
     ],
   },
   { path: "*", element: <Navigate to="/dashboard" replace /> },

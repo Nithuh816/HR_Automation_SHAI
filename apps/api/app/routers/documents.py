@@ -17,8 +17,8 @@ from app.models.document import Document
 from app.models.enums import ApplicationStatus, DocumentStatus, MagicLinkScope, Role
 from app.schemas.candidate import MagicLinkResponse
 from app.schemas.document import DocumentRead, DocumentReviewRequest
+from app.services import audit, magic_links
 from app.services import documents as svc
-from app.services import magic_links
 
 router = APIRouter(prefix="/api/v1", tags=["documents"])
 
@@ -87,6 +87,15 @@ def fetch_file(doc_id: int, db: SessionDep, user: CurrentUser) -> Response:
         body = get_storage().get(doc.storage_key)
     except (FileNotFoundError, OSError) as exc:
         raise HTTPException(status_code=404, detail="file missing from storage") from exc
+    audit.record(
+        db,
+        actor=user,
+        action="document.accessed",
+        entity_type="document",
+        entity_id=doc.id,
+        summary=doc.original_filename,
+    )
+    db.commit()
     return Response(
         content=body,
         media_type=doc.content_type,
@@ -101,6 +110,9 @@ def verify_document(doc_id: int, db: SessionDep, user: CurrentUser) -> DocumentR
     doc.status = DocumentStatus.VERIFIED
     doc.reviewed_by_id = user.id
     doc.reviewed_at = datetime.now(UTC)
+    audit.record(
+        db, actor=user, action="document.verified", entity_type="document", entity_id=doc.id
+    )
     db.commit()
     db.refresh(doc)
     return _to_read(doc)
@@ -116,6 +128,14 @@ def reject_document(
     doc.review_note = payload.note
     doc.reviewed_by_id = user.id
     doc.reviewed_at = datetime.now(UTC)
+    audit.record(
+        db,
+        actor=user,
+        action="document.rejected",
+        entity_type="document",
+        entity_id=doc.id,
+        meta={"note": payload.note},
+    )
     db.commit()
     db.refresh(doc)
     return _to_read(doc)

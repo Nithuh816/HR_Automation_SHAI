@@ -21,6 +21,7 @@ from app.schemas.requisition import (
     RequisitionUpdate,
     StatusChangeRequest,
 )
+from app.services import audit
 from app.services import requisitions as svc
 
 router = APIRouter(prefix="/api/v1/requisitions", tags=["requisitions"])
@@ -64,6 +65,14 @@ def create_requisition(
     db.add(req)
     db.flush()
     req.code = svc.make_code(req.id)
+    audit.record(
+        db,
+        actor=user,
+        action="requisition.created",
+        entity_type="requisition",
+        entity_id=req.id,
+        summary=f"{req.code} · {req.title}",
+    )
     db.commit()
     db.refresh(req)
     return req
@@ -137,6 +146,15 @@ def assign_requisition(
         raise HTTPException(status_code=422, detail="recruiter must be an active TA member")
     req.assigned_recruiter_id = recruiter.id
     req.status = RequisitionStatus.ASSIGNED
+    audit.record(
+        db,
+        actor=user,
+        action="requisition.assigned",
+        entity_type="requisition",
+        entity_id=req.id,
+        summary=f"Assigned to {recruiter.name}",
+        meta={"recruiter_id": recruiter.id},
+    )
     db.commit()
     db.refresh(req)
     return req
@@ -158,6 +176,15 @@ def change_status(
     req.status = payload.status
     if payload.status == RequisitionStatus.SUBMITTED:
         req.assigned_recruiter_id = None
+    audit.record(
+        db,
+        actor=user,
+        action="requisition.status_changed",
+        entity_type="requisition",
+        entity_id=req.id,
+        summary=f"Status → {payload.status.value}",
+        meta={"status": payload.status.value},
+    )
     db.commit()
     db.refresh(req)
     return req

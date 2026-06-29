@@ -16,7 +16,7 @@ from app.models.offer import Offer
 from app.models.onboarding import OnboardingHandoff
 from app.models.requisition import Requisition
 from app.schemas.onboarding import OnboardingDetail, OnboardingQueueItem
-from app.services import onboarding
+from app.services import audit, onboarding
 
 router = APIRouter(prefix="/api/v1/onboarding", tags=["onboarding"])
 
@@ -119,6 +119,16 @@ def push_to_greythr(app_id: int, db: SessionDep, user: CurrentUser) -> Onboardin
         raise HTTPException(status_code=502, detail=f"GreytHR push failed: {exc}") from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    audit.record(
+        db,
+        actor=user,
+        action="onboarding.pushed",
+        entity_type="application",
+        entity_id=app_id,
+        summary=f"Pushed to GreytHR ({handoff.greythr_employee_id})",
+        meta={"employee_id": handoff.greythr_employee_id},
+    )
+    db.commit()
     return _detail(db, handoff)
 
 
@@ -130,4 +140,14 @@ def confirm_joining(handoff_id: int, db: SessionDep, user: CurrentUser) -> Onboa
         raise HTTPException(status_code=404, detail="handoff not found")
     if handoff.status not in (OnboardingStatus.PUSHED, OnboardingStatus.JOINED):
         raise HTTPException(status_code=409, detail="employee must be pushed to GreytHR first")
-    return _detail(db, onboarding.confirm_joining(db, handoff))
+    handoff = onboarding.confirm_joining(db, handoff)
+    audit.record(
+        db,
+        actor=user,
+        action="onboarding.joined",
+        entity_type="application",
+        entity_id=handoff.application_id,
+        summary="Candidate joined",
+    )
+    db.commit()
+    return _detail(db, handoff)
