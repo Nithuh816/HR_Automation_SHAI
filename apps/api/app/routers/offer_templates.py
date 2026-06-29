@@ -24,9 +24,7 @@ Manager = Annotated[User, Depends(require_roles(Role.HR_HEAD, Role.TA_TL))]
 
 
 @router.post("", response_model=OfferTemplateRead, status_code=status.HTTP_201_CREATED)
-def create_template(
-    payload: OfferTemplateCreate, db: SessionDep, user: Manager
-) -> OfferTemplate:
+def create_template(payload: OfferTemplateCreate, db: SessionDep, user: Manager) -> OfferTemplate:
     template = OfferTemplate(
         name=payload.name,
         subject=payload.subject,

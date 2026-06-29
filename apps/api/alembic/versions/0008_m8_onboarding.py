@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0008_m8_onboarding"
@@ -20,7 +21,10 @@ depends_on: str | Sequence[str] | None = None
 # Created explicitly in upgrade() and dropped in downgrade(); _create_events=False
 # stops op.create_table from re-emitting CREATE TYPE (Postgres rejects the duplicate).
 ONBOARDING_STATUS_ENUM = sa.Enum(
-    "PENDING", "PUSHED", "FAILED", "JOINED",
+    "PENDING",
+    "PUSHED",
+    "FAILED",
+    "JOINED",
     name="onboarding_status_enum",
     _create_events=False,
 )
@@ -42,8 +46,12 @@ def upgrade() -> None:
         sa.Column("pushed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("joined_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(
             ["application_id"], ["candidate_applications.id"], name="fk_onboarding_application"
         ),
@@ -56,8 +64,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        "ix_onboarding_handoffs_application_id", table_name="onboarding_handoffs"
-    )
+    op.drop_index("ix_onboarding_handoffs_application_id", table_name="onboarding_handoffs")
     op.drop_table("onboarding_handoffs")
     ONBOARDING_STATUS_ENUM.drop(op.get_bind(), checkfirst=True)

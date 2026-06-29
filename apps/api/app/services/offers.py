@@ -59,8 +59,7 @@ def compute_breakdown(annual_ctc: int) -> list[dict[str, Any]]:
         ("Gratuity", gratuity),
     ]
     components = [
-        {"label": label, "annual": annual, "monthly": round(annual / 12)}
-        for label, annual in rows
+        {"label": label, "annual": annual, "monthly": round(annual / 12)} for label, annual in rows
     ]
     components.append(
         {"label": "Total CTC", "annual": annual_ctc, "monthly": round(annual_ctc / 12)}
@@ -102,9 +101,7 @@ def render_letter_html(
     components: list[dict[str, Any]],
 ) -> str:
     """Wrap a rendered body + salary table into a printable HTML document."""
-    paragraphs = "".join(
-        f"<p>{line.strip()}</p>" for line in body.split("\n\n") if line.strip()
-    )
+    paragraphs = "".join(f"<p>{line.strip()}</p>" for line in body.split("\n\n") if line.strip())
     rows = "".join(
         f"<tr><td>{c['label']}</td>"
         f"<td style='text-align:right'>₹{c['annual']:,}</td>"

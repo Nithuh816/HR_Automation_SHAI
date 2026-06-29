@@ -222,7 +222,9 @@ def reschedule_interview(
             Candidate,
             db.get(CandidateApplication, interview.application_id).candidate_id,  # type: ignore[union-attr]
         )
-        subject = f"{interview.round.value.upper()} — {candidate.name if candidate else 'Candidate'}"
+        subject = (
+            f"{interview.round.value.upper()} — {candidate.name if candidate else 'Candidate'}"
+        )
         interview.teams_join_url = graph.create_teams_meeting(
             subject, interview.scheduled_at, interview.duration_minutes
         )
@@ -232,9 +234,7 @@ def reschedule_interview(
 
 
 @router.post("/interviews/{interview_id}/cancel", response_model=InterviewDetail)
-def cancel_interview(
-    interview_id: int, db: SessionDep, user: CurrentUser
-) -> InterviewDetail:
+def cancel_interview(interview_id: int, db: SessionDep, user: CurrentUser) -> InterviewDetail:
     _require_schedule(user.role)
     interview = _get_interview(db, interview_id)
     if interview.status == InterviewStatus.COMPLETED:

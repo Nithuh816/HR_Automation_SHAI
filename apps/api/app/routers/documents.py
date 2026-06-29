@@ -67,9 +67,7 @@ def list_documents(candidate_id: int, db: SessionDep, user: CurrentUser) -> list
     if db.get(Candidate, candidate_id) is None:
         raise HTTPException(status_code=404, detail="candidate not found")
     rows = db.scalars(
-        select(Document)
-        .where(Document.candidate_id == candidate_id)
-        .order_by(Document.id.desc())
+        select(Document).where(Document.candidate_id == candidate_id).order_by(Document.id.desc())
     )
     return [_to_read(d) for d in rows]
 
@@ -134,9 +132,7 @@ def delete_document(doc_id: int, db: SessionDep, user: CurrentUser) -> None:
 
 
 @router.post("/candidates/{candidate_id}/upload-link", response_model=MagicLinkResponse)
-def create_upload_link(
-    candidate_id: int, db: SessionDep, user: CurrentUser
-) -> MagicLinkResponse:
+def create_upload_link(candidate_id: int, db: SessionDep, user: CurrentUser) -> MagicLinkResponse:
     _require(user.role, CAN_MANAGE)
     if db.get(Candidate, candidate_id) is None:
         raise HTTPException(status_code=404, detail="candidate not found")
@@ -148,8 +144,6 @@ def create_upload_link(
     )
     if app is None:
         raise HTTPException(status_code=409, detail="candidate has no active application")
-    token, link = magic_links.create_link(
-        db, MagicLinkScope.DOC_UPLOAD, app.id, UPLOAD_LINK_TTL
-    )
+    token, link = magic_links.create_link(db, MagicLinkScope.DOC_UPLOAD, app.id, UPLOAD_LINK_TTL)
     db.commit()
     return MagicLinkResponse(url=magic_links.build_url(token, "upload"), expires_at=link.expires_at)

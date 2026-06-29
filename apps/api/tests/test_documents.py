@@ -24,9 +24,9 @@ def _candidate_app(client, hr_header, rec_header, dept_factory, fresher=False):
 
 
 def _upload_token(client, rec_header, candidate_id):
-    url = client.post(
-        f"/api/v1/candidates/{candidate_id}/upload-link", headers=rec_header
-    ).json()["url"]
+    url = client.post(f"/api/v1/candidates/{candidate_id}/upload-link", headers=rec_header).json()[
+        "url"
+    ]
     return url.rsplit("/", 1)[-1]
 
 
@@ -112,9 +112,9 @@ def test_verify_and_fetch_file(client, make_user, make_dept, auth_header):
     token = _upload_token(client, auth_header(rec.id), cid)
     _post_file(client, token, "resume", b"Asha Rao - resume text", "cv.txt")
 
-    doc_id = client.get(
-        f"/api/v1/candidates/{cid}/documents", headers=auth_header(rec.id)
-    ).json()[0]["id"]
+    doc_id = client.get(f"/api/v1/candidates/{cid}/documents", headers=auth_header(rec.id)).json()[
+        0
+    ]["id"]
 
     # The raw file is served behind auth, never in the JSON list.
     f = client.get(f"/api/v1/documents/{doc_id}/file", headers=auth_header(rec.id))

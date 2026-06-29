@@ -34,9 +34,7 @@ def list_items(
 
 
 @router.post("", response_model=ChecklistItemRead, status_code=status.HTTP_201_CREATED)
-def create_item(
-    payload: ChecklistItemCreate, db: SessionDep, _: Manager
-) -> DocumentChecklist:
+def create_item(payload: ChecklistItemCreate, db: SessionDep, _: Manager) -> DocumentChecklist:
     item = DocumentChecklist(
         checklist_type=payload.checklist_type,
         document_type=payload.document_type,

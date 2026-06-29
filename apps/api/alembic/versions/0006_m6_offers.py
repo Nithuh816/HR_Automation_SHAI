@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0006_m6_offers"
@@ -49,9 +50,15 @@ def upgrade() -> None:
         sa.Column("body_md", sa.Text(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name="fk_offer_template_created_by"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["created_by_id"], ["users.id"], name="fk_offer_template_created_by"
+        ),
         sa.UniqueConstraint("name", name="uq_offer_templates_name"),
     )
 
@@ -72,9 +79,15 @@ def upgrade() -> None:
         sa.Column("sent_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("responded_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("decline_reason", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["application_id"], ["candidate_applications.id"], name="fk_offer_application"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["application_id"], ["candidate_applications.id"], name="fk_offer_application"
+        ),
         sa.ForeignKeyConstraint(["template_id"], ["offer_templates.id"], name="fk_offer_template"),
         sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name="fk_offer_created_by"),
         sa.ForeignKeyConstraint(["approved_by_id"], ["users.id"], name="fk_offer_approved_by"),

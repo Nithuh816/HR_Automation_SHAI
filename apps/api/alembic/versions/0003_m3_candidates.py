@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0003_m3_candidates"
@@ -21,13 +22,25 @@ depends_on: str | Sequence[str] | None = None
 # ``_create_events=False`` stops ``op.create_table`` from emitting a *second* CREATE TYPE
 # for the same type, which Postgres rejects ("type ... already exists").
 SOURCE_ENUM = sa.Enum(
-    "LINKEDIN", "NAUKRI", "REFERRAL", "INSTITUTION", "COLD_CALL", "OTHER",
+    "LINKEDIN",
+    "NAUKRI",
+    "REFERRAL",
+    "INSTITUTION",
+    "COLD_CALL",
+    "OTHER",
     name="candidate_source_enum",
     _create_events=False,
 )
 STAGE_ENUM = sa.Enum(
-    "SOURCED", "L1_APPLICATION", "L2_ASSESSMENT", "L3_HR", "L4_TECH1",
-    "L5_TECH2", "L6_SALARY", "OFFER", "JOINED",
+    "SOURCED",
+    "L1_APPLICATION",
+    "L2_ASSESSMENT",
+    "L3_HR",
+    "L4_TECH1",
+    "L5_TECH2",
+    "L6_SALARY",
+    "OFFER",
+    "JOINED",
     name="stage_enum",
     _create_events=False,
 )
@@ -64,8 +77,12 @@ def upgrade() -> None:
         sa.Column("referred_by", sa.String(length=160), nullable=True),
         sa.Column("resume_url", sa.Text(), nullable=True),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name="fk_candidate_created_by"),
     )
     op.create_index("ix_candidates_email", "candidates", ["email"])
@@ -80,13 +97,21 @@ def upgrade() -> None:
         sa.Column("stage_entered_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("rejection_stage", _stage(False), nullable=True),
         sa.Column("rejection_reason", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["candidate_id"], ["candidates.id"], name="fk_app_candidate"),
         sa.ForeignKeyConstraint(["requisition_id"], ["requisitions.id"], name="fk_app_requisition"),
     )
-    op.create_index("ix_candidate_applications_candidate_id", "candidate_applications", ["candidate_id"])
-    op.create_index("ix_candidate_applications_requisition_id", "candidate_applications", ["requisition_id"])
+    op.create_index(
+        "ix_candidate_applications_candidate_id", "candidate_applications", ["candidate_id"]
+    )
+    op.create_index(
+        "ix_candidate_applications_requisition_id", "candidate_applications", ["requisition_id"]
+    )
 
     op.create_table(
         "application_form_l1",
@@ -94,9 +119,15 @@ def upgrade() -> None:
         sa.Column("application_id", sa.Integer(), nullable=False),
         sa.Column("payload_json", sa.Text(), nullable=False),
         sa.Column("submitted_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["application_id"], ["candidate_applications.id"], name="fk_l1_application"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["application_id"], ["candidate_applications.id"], name="fk_l1_application"
+        ),
         sa.UniqueConstraint("application_id", name="uq_l1_application"),
     )
 
@@ -108,9 +139,15 @@ def upgrade() -> None:
         sa.Column("application_id", sa.Integer(), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("used_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["application_id"], ["candidate_applications.id"], name="fk_magiclink_application"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["application_id"], ["candidate_applications.id"], name="fk_magiclink_application"
+        ),
         sa.UniqueConstraint("token_hash", name="uq_magic_links_token_hash"),
     )
     op.create_index("ix_magic_links_token_hash", "magic_links", ["token_hash"])

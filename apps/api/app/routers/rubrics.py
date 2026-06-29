@@ -112,12 +112,8 @@ def add_criterion(
     return criterion
 
 
-@router.delete(
-    "/{rubric_id}/criteria/{criterion_id}", status_code=status.HTTP_204_NO_CONTENT
-)
-def remove_criterion(
-    rubric_id: int, criterion_id: int, db: SessionDep, _: Manager
-) -> None:
+@router.delete("/{rubric_id}/criteria/{criterion_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_criterion(rubric_id: int, criterion_id: int, db: SessionDep, _: Manager) -> None:
     criterion = db.scalar(
         select(RubricCriterion)
         .where(RubricCriterion.id == criterion_id)

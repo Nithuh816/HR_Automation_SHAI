@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0007_m7_documents"
@@ -38,7 +39,11 @@ DOCUMENT_TYPE_ENUM = sa.Enum(
     _create_events=False,
 )
 DOCUMENT_STATUS_ENUM = sa.Enum(
-    "PENDING", "EXTRACTED", "NEEDS_REVIEW", "VERIFIED", "REJECTED",
+    "PENDING",
+    "EXTRACTED",
+    "NEEDS_REVIEW",
+    "VERIFIED",
+    "REJECTED",
     name="document_status_enum",
     _create_events=False,
 )
@@ -61,8 +66,12 @@ def upgrade() -> None:
         sa.Column("label", sa.String(length=160), nullable=False),
         sa.Column("required", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("position", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
     )
     op.create_index(
         "ix_document_checklists_checklist_type", "document_checklists", ["checklist_type"]
@@ -87,10 +96,16 @@ def upgrade() -> None:
         sa.Column("uploaded_by_id", sa.Integer(), nullable=True),
         sa.Column("reviewed_by_id", sa.Integer(), nullable=True),
         sa.Column("reviewed_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["candidate_id"], ["candidates.id"], name="fk_document_candidate"),
-        sa.ForeignKeyConstraint(["application_id"], ["candidate_applications.id"], name="fk_document_application"),
+        sa.ForeignKeyConstraint(
+            ["application_id"], ["candidate_applications.id"], name="fk_document_application"
+        ),
         sa.ForeignKeyConstraint(["uploaded_by_id"], ["users.id"], name="fk_document_uploaded_by"),
         sa.ForeignKeyConstraint(["reviewed_by_id"], ["users.id"], name="fk_document_reviewed_by"),
     )

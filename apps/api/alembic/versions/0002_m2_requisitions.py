@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0002_m2_requisitions"
@@ -19,7 +20,12 @@ depends_on: str | Sequence[str] | None = None
 
 URGENCY_ENUM = sa.Enum("LOW", "NORMAL", "HIGH", "URGENT", name="urgency_enum")
 STATUS_ENUM = sa.Enum(
-    "DRAFT", "SUBMITTED", "ASSIGNED", "ON_HOLD", "FILLED", "CANCELLED",
+    "DRAFT",
+    "SUBMITTED",
+    "ASSIGNED",
+    "ON_HOLD",
+    "FILLED",
+    "CANCELLED",
     name="requisition_status_enum",
 )
 
@@ -42,8 +48,12 @@ def upgrade() -> None:
         sa.Column("created_by_id", sa.Integer(), nullable=False),
         sa.Column("assigned_recruiter_id", sa.Integer(), nullable=True),
         sa.Column("due_by", sa.Date(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["department_id"], ["departments.id"], name="fk_req_department"),
         sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name="fk_req_created_by"),
         sa.ForeignKeyConstraint(["assigned_recruiter_id"], ["users.id"], name="fk_req_recruiter"),
@@ -57,8 +67,12 @@ def upgrade() -> None:
         sa.Column("requisition_id", sa.Integer(), nullable=False),
         sa.Column("author_id", sa.Integer(), nullable=False),
         sa.Column("body", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["requisition_id"], ["requisitions.id"], name="fk_reqcomment_req"),
         sa.ForeignKeyConstraint(["author_id"], ["users.id"], name="fk_reqcomment_author"),
     )

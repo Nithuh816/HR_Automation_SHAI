@@ -13,9 +13,9 @@ def _candidate_app(client, hr_header, rec_header, dept_factory, dept_name="RCM")
         headers=rec_header,
         json={"name": "Asha Rao", "email": "asha@example.com", "requisition_id": req["id"]},
     ).json()
-    return client.get(
-        f"/api/v1/candidates/{cand['id']}/applications", headers=rec_header
-    ).json()[0]["id"]
+    return client.get(f"/api/v1/candidates/{cand['id']}/applications", headers=rec_header).json()[
+        0
+    ]["id"]
 
 
 def _draft_offer(client, rec_header, app_id, ctc=600000):

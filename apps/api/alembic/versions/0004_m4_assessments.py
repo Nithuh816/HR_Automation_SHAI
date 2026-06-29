@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0004_m4_assessments"
@@ -20,7 +21,10 @@ depends_on: str | Sequence[str] | None = None
 # _create_events=False: the type is created explicitly in upgrade(); this stops
 # op.create_table from re-emitting CREATE TYPE (Postgres rejects the duplicate).
 ATTEMPT_STATUS_ENUM = sa.Enum(
-    "NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "EXPIRED",
+    "NOT_STARTED",
+    "IN_PROGRESS",
+    "SUBMITTED",
+    "EXPIRED",
     name="attempt_status_enum",
     _create_events=False,
 )
@@ -33,9 +37,7 @@ def upgrade() -> None:
     # New magic-link scope value (Postgres native enum needs ALTER TYPE; on
     # SQLite enum columns are plain VARCHAR so no change is required).
     if bind.dialect.name == "postgresql":
-        op.execute(
-            "ALTER TYPE magic_link_scope_enum ADD VALUE IF NOT EXISTS 'L2_ASSESSMENT'"
-        )
+        op.execute("ALTER TYPE magic_link_scope_enum ADD VALUE IF NOT EXISTS 'L2_ASSESSMENT'")
 
     op.create_table(
         "questions",
@@ -47,8 +49,12 @@ def upgrade() -> None:
         sa.Column("points", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name="fk_question_created_by"),
     )
 
@@ -61,8 +67,12 @@ def upgrade() -> None:
         sa.Column("pass_pct", sa.Integer(), nullable=False, server_default="60"),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("created_by_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.ForeignKeyConstraint(["created_by_id"], ["users.id"], name="fk_template_created_by"),
         sa.UniqueConstraint("name", name="uq_assessment_templates_name"),
     )
@@ -73,9 +83,15 @@ def upgrade() -> None:
         sa.Column("template_id", sa.Integer(), nullable=False),
         sa.Column("question_id", sa.Integer(), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["template_id"], ["assessment_templates.id"], name="fk_tq_template"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["template_id"], ["assessment_templates.id"], name="fk_tq_template"
+        ),
         sa.ForeignKeyConstraint(["question_id"], ["questions.id"], name="fk_tq_question"),
     )
     op.create_index("ix_template_questions_template_id", "template_questions", ["template_id"])
@@ -92,12 +108,22 @@ def upgrade() -> None:
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("score_pct", sa.Float(), nullable=True),
         sa.Column("passed", sa.Boolean(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["application_id"], ["candidate_applications.id"], name="fk_attempt_application"),
-        sa.ForeignKeyConstraint(["template_id"], ["assessment_templates.id"], name="fk_attempt_template"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["application_id"], ["candidate_applications.id"], name="fk_attempt_application"
+        ),
+        sa.ForeignKeyConstraint(
+            ["template_id"], ["assessment_templates.id"], name="fk_attempt_template"
+        ),
     )
-    op.create_index("ix_assessment_attempts_application_id", "assessment_attempts", ["application_id"])
+    op.create_index(
+        "ix_assessment_attempts_application_id", "assessment_attempts", ["application_id"]
+    )
 
     op.create_table(
         "assessment_answers",
@@ -105,9 +131,15 @@ def upgrade() -> None:
         sa.Column("attempt_id", sa.Integer(), nullable=False),
         sa.Column("question_id", sa.Integer(), nullable=False),
         sa.Column("selected_index", sa.Integer(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.ForeignKeyConstraint(["attempt_id"], ["assessment_attempts.id"], name="fk_answer_attempt"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["attempt_id"], ["assessment_attempts.id"], name="fk_answer_attempt"
+        ),
         sa.ForeignKeyConstraint(["question_id"], ["questions.id"], name="fk_answer_question"),
     )
     op.create_index("ix_assessment_answers_attempt_id", "assessment_answers", ["attempt_id"])

@@ -33,9 +33,7 @@ class Offer(TimestampMixin, Base):
     application_id: Mapped[int] = mapped_column(
         ForeignKey("candidate_applications.id"), nullable=False, index=True
     )
-    template_id: Mapped[int | None] = mapped_column(
-        ForeignKey("offer_templates.id"), nullable=True
-    )
+    template_id: Mapped[int | None] = mapped_column(ForeignKey("offer_templates.id"), nullable=True)
     designation: Mapped[str] = mapped_column(String(160), nullable=False)
     annual_ctc: Mapped[int] = mapped_column(Integer, nullable=False)
     # Computed salary breakdown (JSON list of {label, annual, monthly}).

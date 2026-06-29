@@ -80,9 +80,7 @@ def assessment_templates(db: SessionDep, _: CurrentUser) -> list[AssessmentTempl
 
 @router.get("/rubrics", response_model=list[RubricOption])
 def rubrics(db: SessionDep, _: CurrentUser) -> list[RubricTemplate]:
-    stmt = (
-        select(RubricTemplate).where(RubricTemplate.is_active).order_by(RubricTemplate.name)
-    )
+    stmt = select(RubricTemplate).where(RubricTemplate.is_active).order_by(RubricTemplate.name)
     return list(db.scalars(stmt))
 
 
