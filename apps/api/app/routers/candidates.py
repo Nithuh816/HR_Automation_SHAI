@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from app.deps import CurrentUser, SessionDep
 from app.models.candidate import Candidate, CandidateApplication
+from app.models.consent import Consent
 from app.models.enums import ApplicationStatus, Role, Stage
 from app.models.requisition import Requisition
 from app.schemas.candidate import (
@@ -18,6 +19,8 @@ from app.schemas.candidate import (
     CandidateRead,
     CandidateUpdate,
 )
+from app.schemas.consent import ConsentRead
+from app.services import consent as consent_svc
 
 router = APIRouter(prefix="/api/v1/candidates", tags=["candidates"])
 
@@ -119,3 +122,11 @@ def attach_application(
     db.commit()
     db.refresh(app)
     return app
+
+
+@router.get("/{candidate_id}/consents", response_model=list[ConsentRead])
+def list_consents(candidate_id: int, db: SessionDep, _: CurrentUser) -> list[Consent]:
+    """DPDPA consent records captured from this candidate's pages."""
+    if db.get(Candidate, candidate_id) is None:
+        raise HTTPException(status_code=404, detail="candidate not found")
+    return consent_svc.for_candidate(db, candidate_id)

@@ -19,7 +19,20 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
 )
 
+celery_app.conf.beat_schedule = {
+    "deliver-outbox": {"task": "outbox.deliver", "schedule": 60.0},
+    "expire-assessment-attempts": {"task": "assessment.expire_attempts", "schedule": 300.0},
+    "interview-reminders": {"task": "reminders.interviews", "schedule": 900.0},
+    "day-before-joining": {"task": "reminders.day_before_joining", "schedule": 3600.0},
+    "requisition-sla": {"task": "sla.check_requisitions", "schedule": 3600.0},
+    "retention-purge": {"task": "retention.purge_rejected", "schedule": 86400.0},
+}
+
 
 @celery_app.task(name="health.ping")
 def ping() -> str:
     return "pong"
+
+
+# Import task modules so the worker/beat register them (after celery_app exists).
+from app.jobs import tasks  # noqa: E402, F401

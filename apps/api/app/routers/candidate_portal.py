@@ -56,6 +56,7 @@ from app.schemas.offer import (
     SalaryComponent,
 )
 from app.services import assessments, magic_links, offers, pipeline
+from app.services import consent as consent_svc
 from app.services import documents as doc_svc
 
 CONSENT_TEXT = (
@@ -210,9 +211,7 @@ def submit_assessment(token: str, payload: AssessmentSubmit, db: SessionDep) -> 
 def _offer_for(db: SessionDep, application_id: int) -> Offer:
     """The most recent offer issued on this application."""
     offer = db.scalar(
-        select(Offer)
-        .where(Offer.application_id == application_id)
-        .order_by(Offer.id.desc())
+        select(Offer).where(Offer.application_id == application_id).order_by(Offer.id.desc())
     )
     if offer is None:
         raise HTTPException(status_code=404, detail="no offer for this link")
@@ -267,9 +266,7 @@ def accept_offer(token: str, db: SessionDep) -> OfferResponseResult:
 
 
 @router.post("/offer/{token}/decline", response_model=OfferResponseResult)
-def decline_offer(
-    token: str, payload: OfferDeclineRequest, db: SessionDep
-) -> OfferResponseResult:
+def decline_offer(token: str, payload: OfferDeclineRequest, db: SessionDep) -> OfferResponseResult:
     app, _, _ = _resolve(db, token, MagicLinkScope.OFFER)
     offer = _offer_for(db, app.id)
     if offer.status != OfferStatus.SENT:
@@ -298,18 +295,14 @@ def _upload_context(db: SessionDep, candidate: Candidate) -> DocUploadContext:
         .order_by(DocumentChecklist.position)
     )
     uploaded = db.scalars(
-        select(Document)
-        .where(Document.candidate_id == candidate.id)
-        .order_by(Document.id.desc())
+        select(Document).where(Document.candidate_id == candidate.id).order_by(Document.id.desc())
     )
     return DocUploadContext(
         candidate_name=candidate.name,
         checklist_type=ctype,
         consent_text=CONSENT_TEXT,
         items=[
-            ChecklistItemPublic(
-                document_type=i.document_type, label=i.label, required=i.required
-            )
+            ChecklistItemPublic(document_type=i.document_type, label=i.label, required=i.required)
             for i in items
         ],
         uploaded=[
@@ -341,6 +334,7 @@ async def upload_document(
     app, candidate, _ = _resolve(db, token, MagicLinkScope.DOC_UPLOAD)
     if not consent:
         raise HTTPException(status_code=422, detail="consent is required to upload")
+    consent_svc.record(db, application_id=app.id, purpose="documents", text=CONSENT_TEXT)
     body = await file.read()
     if not body:
         raise HTTPException(status_code=422, detail="empty file")

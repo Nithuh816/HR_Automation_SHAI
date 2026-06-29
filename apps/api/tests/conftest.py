@@ -10,6 +10,8 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 os.environ.setdefault("PII_ENC_KEY", "pibE2wQxwviWG-XyCs06JmkmvRELomZly4pPz2NvMQo=")
 # Keep document uploads on local-fs during tests (no MinIO/S3).
 os.environ.setdefault("STORAGE_BACKEND", "local")
+# Don't reach for a real SMTP server in tests; use the log-only transport.
+os.environ.setdefault("EMAIL_PROVIDER", "console")
 
 
 @pytest.fixture()

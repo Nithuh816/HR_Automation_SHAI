@@ -17,6 +17,7 @@ from app.models.candidate import (
     CandidateApplication,
     MagicLink,
 )
+from app.models.consent import Consent
 from app.models.department import Department
 from app.models.document import Document, DocumentChecklist
 from app.models.enums import (
@@ -30,7 +31,10 @@ from app.models.enums import (
     InterviewRound,
     InterviewStatus,
     MagicLinkScope,
+    NotificationChannel,
+    NotificationStatus,
     OfferStatus,
+    OnboardingStatus,
     RequisitionStatus,
     Role,
     ScorecardDecision,
@@ -45,7 +49,9 @@ from app.models.interview import (
     Scorecard,
     ScorecardScore,
 )
+from app.models.notification import Notification
 from app.models.offer import Offer, OfferTemplate
+from app.models.onboarding import OnboardingHandoff
 from app.models.requisition import Requisition, RequisitionComment
 from app.models.user import User
 
@@ -60,6 +66,7 @@ __all__ = [
     "CandidateApplication",
     "CandidateSource",
     "ChecklistType",
+    "Consent",
     "Department",
     "Document",
     "DocumentChecklist",
@@ -71,9 +78,14 @@ __all__ = [
     "InterviewStatus",
     "MagicLink",
     "MagicLinkScope",
+    "Notification",
+    "NotificationChannel",
+    "NotificationStatus",
     "Offer",
     "OfferStatus",
     "OfferTemplate",
+    "OnboardingHandoff",
+    "OnboardingStatus",
     "Question",
     "Requisition",
     "RequisitionComment",

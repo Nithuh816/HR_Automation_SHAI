@@ -47,6 +47,7 @@ interface AuthContextValue {
   loading: boolean;
   devLogin: (email: string) => Promise<void>;
   startMicrosoftLogin: () => Promise<void>;
+  completeMicrosoftLogin: (code: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -93,6 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     window.location.href = data.authorization_url;
   }, []);
 
+  const completeMicrosoftLogin = useCallback(
+    async (code: string) => {
+      const { data } = await api.get<{ access_token: string }>(
+        `/auth/callback?code=${encodeURIComponent(code)}`,
+      );
+      sessionStorage.setItem(TOKEN_KEY, data.access_token);
+      await loadMe();
+    },
+    [loadMe],
+  );
+
   const logout = useCallback(() => {
     sessionStorage.removeItem(TOKEN_KEY);
     setUser(null);
@@ -100,8 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, devLogin, startMicrosoftLogin, logout }),
-    [user, loading, devLogin, startMicrosoftLogin, logout],
+    () => ({ user, loading, devLogin, startMicrosoftLogin, completeMicrosoftLogin, logout }),
+    [user, loading, devLogin, startMicrosoftLogin, completeMicrosoftLogin, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -182,3 +182,24 @@ class DocumentStatus(StrEnum):
     NEEDS_REVIEW = "needs_review"  # low/no confidence -> manual queue
     VERIFIED = "verified"  # a human confirmed it
     REJECTED = "rejected"
+
+
+class OnboardingStatus(StrEnum):
+    """Lifecycle of a new-hire handoff into GreytHR (M8)."""
+
+    PENDING = "pending"  # offer accepted, not yet pushed
+    PUSHED = "pushed"  # GreytHR employee record created
+    FAILED = "failed"  # push failed (retryable)
+    JOINED = "joined"  # candidate confirmed joined; pipeline complete
+
+
+class NotificationChannel(StrEnum):
+    EMAIL = "email"
+    WHATSAPP = "whatsapp"
+    IN_APP = "in_app"
+
+
+class NotificationStatus(StrEnum):
+    QUEUED = "queued"  # awaiting outbox delivery (email/whatsapp)
+    SENT = "sent"  # delivered (or created, for in-app)
+    FAILED = "failed"  # delivery failed; will be retried

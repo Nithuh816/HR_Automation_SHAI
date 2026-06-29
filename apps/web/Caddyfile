@@ -1,0 +1,18 @@
+# Edge for the production SPA. Serves the built React app and reverse-proxies
+# the API on the same origin, so the browser only ever talks to one host.
+# SITE_ADDRESS is a domain (e.g. hr.shaihealth.com) for automatic HTTPS, or
+# ":80" for plain HTTP (local prod smoke test).
+{$SITE_ADDRESS} {
+	encode gzip
+
+	@api path /api/* /health
+	handle @api {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

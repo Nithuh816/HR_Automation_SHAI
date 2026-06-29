@@ -144,6 +144,19 @@ Then open:
 
 ```powershell
 docker compose up --build
+# first run only — create the schema and seed staff/departments:
+docker compose exec api alembic upgrade head
+docker compose exec api python -m app.seed
+```
+
+On `/login`, use the **dev-login** picker (any seeded user, e.g. _Balaji P — HR Head_); Microsoft SSO activates once `MS_*` is configured.
+
+### Production
+
+A TLS-terminated overlay (Caddy + built SPA + API workers + Celery) lives in [`docker-compose.prod.yml`](./docker-compose.prod.yml); deploy, backup, and on-call steps are in [`docs/OPS.md`](./docs/OPS.md).
+
+```powershell
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## Testing
@@ -165,22 +178,24 @@ CI runs the full matrix on every push and PR.
 
 ## Roadmap
 
-The platform ships as **v1 big-bang** covering all 11 stages, built across milestones **M0 → M11**. See [`plan.md`](./plan.md) for the full architecture, data model, page inventory, integration design, security/PII posture, and per-milestone scope.
+All 11 stages are built (**M0 → M11**). See [`plan.md`](./plan.md) for the full architecture, data model, page inventory, integration design, security/PII posture, and per-milestone scope.
 
-| Milestone | Status        | Scope                                                                       |
-| --------- | ------------- | --------------------------------------------------------------------------- |
-| M0        | ✅ Complete   | Monorepo, FastAPI + React skeletons, Docker, CI, dark-violet theme         |
-| M1        | 🔜 Next       | DB models (users/depts/requisitions), MS SSO, RBAC, admin pages, seed       |
-| M2        | ⏳ Planned    | Requisitions CRUD, triage inbox, assignment, HR Head dashboard              |
-| M3        | ⏳ Planned    | Candidates, resume parsing, pipeline kanban, L1 application form            |
-| M4        | ⏳ Planned    | Assessment engine (question bank + candidate-facing timed test)             |
-| M5        | ⏳ Planned    | Interview scheduling, Teams integration, scorecards L3/L4/L5/L6             |
-| M6        | ⏳ Planned    | Offer calculator, approval workflow, offer-letter PDF                       |
-| M7        | ⏳ Planned    | Document upload portal, OCR validation, secure storage                      |
-| M8        | ⏳ Planned    | Onboarding queue, **GreytHR API** handoff                                   |
-| M9        | ⏳ Planned    | Notifications hub (email + WhatsApp), scheduled jobs                        |
-| M10       | ⏳ Planned    | Dashboards + reports                                                        |
-| M11       | ⏳ Planned    | DPDPA consent + retention, production overlay (Caddy + TLS), ops runbook    |
+| Milestone | Status      | Scope                                                                    |
+| --------- | ----------- | ------------------------------------------------------------------------ |
+| M0        | ✅ Complete | Monorepo, FastAPI + React skeletons, Docker, CI, dark-violet theme       |
+| M1        | ✅ Complete | DB models (users/depts/requisitions), auth + RBAC, admin pages, seed     |
+| M2        | ✅ Complete | Requisitions CRUD, triage inbox, assignment, HR Head dashboard           |
+| M3        | ✅ Complete | Candidates, pipeline kanban, magic links, L1 application form            |
+| M4        | ✅ Complete | Assessment engine (question bank + candidate-facing timed test)          |
+| M5        | ✅ Complete | Interview scheduling, Teams hook, scorecards L3/L4/L5/L6, rubric editor   |
+| M6        | ✅ Complete | Offer calculator, approval workflow, offer-letter PDF, candidate accept  |
+| M7        | ✅ Complete | Document upload portal, OCR extraction, encrypted PII storage            |
+| M8        | ✅ Complete | Onboarding queue + **GreytHR** handoff (stub adapter until creds arrive) |
+| M9        | ✅ Complete | Notifications (email via SMTP/Resend, WhatsApp stub) + Celery jobs       |
+| M10       | ✅ Complete | Dashboards + reports (funnel, sources, drop-offs, recruiter performance) |
+| M11       | ✅ Complete | DPDPA consent + retention purge, prod overlay (Caddy + TLS), ops runbook |
+
+> **Integration status:** GreytHR and WhatsApp ship with stub adapters that the real HTTP clients replace automatically once credentials are set; the Microsoft SSO code path is complete and activates when an Entra ID app is configured. Until then, sign in locally with the **dev-login** picker on `/login` (any seeded user). See [`docs/OPS.md`](./docs/OPS.md) for deployment.
 
 ## Security
 

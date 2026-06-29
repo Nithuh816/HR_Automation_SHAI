@@ -44,6 +44,8 @@ class Candidate(TimestampMixin, Base):
     resume_url: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # Set once DPDPA retention has anonymised this candidate's PII (M11).
+    redacted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class CandidateApplication(TimestampMixin, Base):

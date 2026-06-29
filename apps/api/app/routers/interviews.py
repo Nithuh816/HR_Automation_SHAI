@@ -29,7 +29,7 @@ from app.schemas.interview import (
     ScorecardSubmit,
 )
 from app.services import interviews as svc
-from app.services import pipeline
+from app.services import notifications, pipeline
 
 router = APIRouter(prefix="/api/v1", tags=["interviews"])
 
@@ -150,6 +150,17 @@ def schedule_interview(
     target = svc.round_stage(payload.round)
     if STAGE_ORDER.index(target) > STAGE_ORDER.index(app.stage):
         pipeline.set_stage(app, target)
+
+    if candidate is not None:
+        notifications.interview_scheduled_email(
+            db,
+            application_id=app.id,
+            candidate_name=candidate.name,
+            candidate_email=candidate.email,
+            round_label=payload.round.value.upper(),
+            when=payload.scheduled_at,
+            join_url=join_url,
+        )
 
     db.commit()
     db.refresh(interview)

@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     whatsapp_access_token: str = ""
     whatsapp_verify_token: str = ""
 
-    email_provider: Literal["smtp", "resend"] = "smtp"
+    email_provider: Literal["smtp", "resend", "console"] = "smtp"
     email_from: str = "hr-noreply@shaihealth.example"
     smtp_host: str = "localhost"
     smtp_port: int = 1025
@@ -58,6 +58,9 @@ class Settings(BaseSettings):
 
     magic_link_hmac_key: str = "dev-magic-key-change-me"
     magic_link_base_url: str = "http://localhost:5173/c"
+
+    # DPDPA: purge rejected-candidate PII this many days after last activity.
+    retention_days: int = 365
 
     cors_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"]

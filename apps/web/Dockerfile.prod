@@ -1,0 +1,16 @@
+# Multi-stage production image: build the SPA, then serve it from Caddy
+# (which also reverse-proxies the API). Used by docker-compose.prod.yml.
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY . .
+# Same-origin API in production; Caddy proxies /api to the api service.
+ARG VITE_API_BASE_URL=/api/v1
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN npm run build
+
+FROM caddy:2-alpine
+COPY --from=build /app/dist /srv
+COPY Caddyfile /etc/caddy/Caddyfile
+EXPOSE 80 443

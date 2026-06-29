@@ -27,7 +27,7 @@ from app.schemas.offer import (
     OfferUpdate,
     SalaryComponent,
 )
-from app.services import magic_links, offers, pipeline
+from app.services import magic_links, notifications, offers, pipeline
 
 router = APIRouter(prefix="/api/v1", tags=["offers"])
 
@@ -150,14 +150,10 @@ def list_offers(db: SessionDep, _: CurrentUser) -> list[OfferDetail]:
 
 
 @router.get("/applications/{app_id}/offers", response_model=list[OfferDetail])
-def list_application_offers(
-    app_id: int, db: SessionDep, _: CurrentUser
-) -> list[OfferDetail]:
+def list_application_offers(app_id: int, db: SessionDep, _: CurrentUser) -> list[OfferDetail]:
     if db.get(CandidateApplication, app_id) is None:
         raise HTTPException(status_code=404, detail="application not found")
-    rows = db.scalars(
-        select(Offer).where(Offer.application_id == app_id).order_by(Offer.id.desc())
-    )
+    rows = db.scalars(select(Offer).where(Offer.application_id == app_id).order_by(Offer.id.desc()))
     return [_detail(db, o) for o in rows]
 
 
@@ -208,6 +204,13 @@ def approve_offer(offer_id: int, db: SessionDep, user: CurrentUser) -> OfferDeta
     offer.status = OfferStatus.APPROVED
     offer.approved_by_id = user.id
     offer.approved_at = datetime.now(UTC)
+    notifications.in_app(
+        db,
+        kind="offer_approved",
+        recipient_user_id=offer.created_by_id,
+        body=f"Your offer #{offer.id} was approved and is ready to send.",
+        related_application_id=offer.application_id,
+    )
     db.commit()
     db.refresh(offer)
     return _detail(db, offer)
@@ -224,10 +227,20 @@ def send_offer(offer_id: int, db: SessionDep, user: CurrentUser) -> OfferSendRes
     )
     offer.status = OfferStatus.SENT
     offer.sent_at = datetime.now(UTC)
+    url = magic_links.build_url(token, "offer")
+    candidate, _ = _context(db, offer)
+    notifications.offer_sent_email(
+        db,
+        application_id=offer.application_id,
+        candidate_name=candidate.name,
+        candidate_email=candidate.email,
+        designation=offer.designation,
+        url=url,
+    )
     db.commit()
     db.refresh(offer)
     return OfferSendResult(
-        url=magic_links.build_url(token, "offer"),
+        url=url,
         expires_at=link.expires_at,
         offer=_detail(db, offer),
     )

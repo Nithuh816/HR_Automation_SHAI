@@ -1,0 +1,109 @@
+# Production overlay — TLS edge (Caddy) + built SPA + API workers + jobs.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Secrets come from .env (never committed). At minimum set: POSTGRES_PASSWORD,
+# APP_SECRET_KEY, PII_ENC_KEY, MAGIC_LINK_HMAC_KEY, SITE_ADDRESS, and the real
+# SMTP / S3 / Microsoft / GreytHR / WhatsApp values. Set SITE_ADDRESS to your
+# domain (e.g. hr.shaihealth.com) for automatic HTTPS, or ":80" for local HTTP.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hr_automation}
+      POSTGRES_USER: ${POSTGRES_USER:-hr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hr} -d ${POSTGRES_DB:-hr_automation}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-hr}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hr_automation}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+    expose:
+      - "8000"
+
+  worker:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-hr}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hr_automation}
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    command: ["celery", "-A", "app.jobs.celery_app", "worker", "--loglevel=info"]
+
+  beat:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    command: ["celery", "-A", "app.jobs.celery_app", "beat", "--loglevel=info"]
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_BASE_URL: /api/v1
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

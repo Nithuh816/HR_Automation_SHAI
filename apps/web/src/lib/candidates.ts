@@ -120,3 +120,15 @@ export async function rejectApplication(appId: number, reason: string): Promise<
 export async function createL1Link(appId: number): Promise<{ url: string; expires_at: string }> {
   return (await api.post<{ url: string; expires_at: string }>(`/applications/${appId}/l1-link`)).data;
 }
+
+export interface Consent {
+  id: number;
+  application_id: number;
+  purpose: string;
+  text: string;
+  given_at: string;
+}
+
+export async function fetchCandidateConsents(id: number): Promise<Consent[]> {
+  return (await api.get<Consent[]>(`/candidates/${id}/consents`)).data;
+}

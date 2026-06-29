@@ -1,4 +1,6 @@
 import {
+  BarChart3,
+  Bell,
   Building2,
   CalendarClock,
   ClipboardCheck,
@@ -26,6 +28,7 @@ const nav = [
   { to: "/interviews/today", label: "Interviews", icon: CalendarClock },
   { to: "/offers", label: "Offers", icon: FileText },
   { to: "/onboarding/queue", label: "Onboarding", icon: UserPlus },
+  { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
 // HR Head-only administration.
@@ -82,6 +85,10 @@ export function Sidebar(): JSX.Element {
             <NavLink to="/settings/checklists" className={linkClass}>
               <FolderCheck className="h-4 w-4" />
               <span>Doc checklists</span>
+            </NavLink>
+            <NavLink to="/reports" className={linkClass}>
+              <BarChart3 className="h-4 w-4" />
+              <span>Reports</span>
             </NavLink>
           </>
         )}

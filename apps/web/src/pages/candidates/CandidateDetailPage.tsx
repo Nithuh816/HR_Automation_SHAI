@@ -13,6 +13,7 @@ import {
   createL1Link,
   fetchCandidate,
   fetchCandidateApplications,
+  fetchCandidateConsents,
 } from "@/lib/candidates";
 import {
   type InterviewRound,
@@ -48,6 +49,10 @@ export function CandidateDetailPage(): JSX.Element {
   const templates = useQuery({
     queryKey: ["template-options"],
     queryFn: fetchTemplateOptions,
+  });
+  const consents = useQuery({
+    queryKey: ["candidate-consents", candidateId],
+    queryFn: () => fetchCandidateConsents(candidateId),
   });
 
   const l1 = useMutation({
@@ -211,6 +216,27 @@ export function CandidateDetailPage(): JSX.Element {
           )}
         </CardContent>
       </Card>
+
+      {consents.data && consents.data.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Consent (DPDPA)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {consents.data.map((cs) => (
+              <div key={cs.id} className="rounded-md border border-border/50 p-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium capitalize">{cs.purpose}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(cs.given_at).toLocaleString()}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{cs.text}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {canEdit &&
         apps.data

@@ -11,10 +11,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     libpq-dev \
+    tesseract-ocr \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    libffi8 \
+    libjpeg62-turbo \
+    shared-mime-info \
+    fonts-dejavu-core \
   && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
-RUN pip install --upgrade pip && pip install -e ".[dev]"
+RUN pip install --upgrade pip && pip install -e ".[dev,ocr]"
 
 COPY . .
 

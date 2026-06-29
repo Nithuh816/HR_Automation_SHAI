@@ -38,6 +38,16 @@ dev = [
   "mypy>=1.13,<2.0",
   "types-python-jose",
 ]
+# OCR + PDF rendering. Needs system libraries (Tesseract, Pango/Cairo) — the
+# Docker image installs them. The app degrades gracefully when these are absent
+# (e.g. CI, which installs only ".[dev]"): documents route to manual review and
+# offer letters fall back to browser print-to-PDF.
+ocr = [
+  "weasyprint>=62,<64",
+  "pytesseract>=0.3.13,<0.4",
+  "pdfplumber>=0.11,<0.12",
+  "Pillow>=10.4,<12",
+]
 
 [tool.setuptools.packages.find]
 include = ["app*"]
@@ -80,6 +90,11 @@ module = [
   "pdfplumber.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Celery's decorators are untyped; don't fail the task modules over that.
+module = ["app.jobs.*"]
+disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

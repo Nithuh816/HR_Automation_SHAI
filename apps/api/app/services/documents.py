@@ -48,19 +48,21 @@ def _text_from(content_type: str, body: bytes) -> str | None:
             import io
 
             import pdfplumber
-        except ImportError:
+
+            with pdfplumber.open(io.BytesIO(body)) as pdf:
+                return "\n".join(page.extract_text() or "" for page in pdf.pages)
+        except Exception:  # missing dep or unreadable PDF -> manual review
             return None
-        with pdfplumber.open(io.BytesIO(body)) as pdf:  # pragma: no cover  — optional dep
-            return "\n".join(page.extract_text() or "" for page in pdf.pages)
     if content_type.startswith("image/"):
         try:
             import io
 
             import pytesseract
             from PIL import Image
-        except ImportError:
+
+            return str(pytesseract.image_to_string(Image.open(io.BytesIO(body))))
+        except Exception:  # missing dep/binary or unreadable image -> manual review
             return None
-        return str(pytesseract.image_to_string(Image.open(io.BytesIO(body))))  # pragma: no cover
     return None
 
 

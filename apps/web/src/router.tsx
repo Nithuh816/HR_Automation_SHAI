@@ -12,11 +12,16 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { HealthPage } from "@/pages/HealthPage";
 import { InterviewDetailPage } from "@/pages/interviews/InterviewDetailPage";
 import { InterviewsTodayPage } from "@/pages/interviews/InterviewsTodayPage";
+import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { PipelineBoardPage } from "@/pages/pipeline/PipelineBoardPage";
 import { PipelineChooserPage } from "@/pages/pipeline/PipelineChooserPage";
 import { OffersListPage } from "@/pages/offers/OffersListPage";
 import { OfferDetailPage } from "@/pages/offers/OfferDetailPage";
+import { NotificationsPage } from "@/pages/notifications/NotificationsPage";
+import { OnboardingDetailPage } from "@/pages/onboarding/OnboardingDetailPage";
+import { OnboardingQueuePage } from "@/pages/onboarding/OnboardingQueuePage";
+import { ReportsPage } from "@/pages/reports/ReportsPage";
 import { DocUploadPage } from "@/pages/portal/DocUploadPage";
 import { L1ApplyPage } from "@/pages/portal/L1ApplyPage";
 import { L2AssessmentPage } from "@/pages/portal/L2AssessmentPage";
@@ -34,6 +39,7 @@ import { UsersPage } from "@/pages/settings/UsersPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/auth/callback", element: <AuthCallbackPage /> },
   // Candidate-facing, no auth.
   { path: "/c/apply/:token", element: <L1ApplyPage /> },
   { path: "/c/assessment/:token", element: <L2AssessmentPage /> },
@@ -69,17 +75,11 @@ export const router = createBrowserRouter([
       { path: "offers/:id", element: <OfferDetailPage /> },
       { path: "settings/offer-templates", element: <OfferTemplatesPage /> },
       { path: "settings/checklists", element: <ChecklistsPage /> },
-      // Stubs — pages added per-milestone.
-      { path: "onboarding/queue", element: <ComingSoon name="Onboarding queue (M8)" /> },
+      { path: "onboarding/queue", element: <OnboardingQueuePage /> },
+      { path: "onboarding/:id", element: <OnboardingDetailPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
+      { path: "reports", element: <ReportsPage /> },
     ],
   },
   { path: "*", element: <Navigate to="/dashboard" replace /> },
 ]);
-
-function ComingSoon({ name }: { name: string }) {
-  return (
-    <div className="grid h-full place-items-center text-sm text-muted-foreground">
-      {name} — coming in a later milestone.
-    </div>
-  );
-}
